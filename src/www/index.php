@@ -15,6 +15,8 @@ mb_internal_encoding("UTF-8");
 
 require_once('../php/Asset.php');
 
+$asset=new Asset(123.54,'$');
+
 // compile html
 $html='<!DOCTYPE html>
         <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
@@ -41,6 +43,7 @@ $html.='<h1>The Asset Object</h1>';
 $html.='<div><label for="msg-file-upload">Test file upload</label><input type="file" name="msg" id="msg-file-upload" style="margin:0.25em;"/><input type="submit" name="process" id="msg-file-process" style="margin:0.25em;" value="Process"/></div>';
 $html.='</form>';
 
+var_dump($asset->getArray());
 
 $html.='</body></html>';
 echo $html;
