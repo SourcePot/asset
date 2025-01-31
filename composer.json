@@ -1,0 +1,17 @@
+{
+    "name":"sourcepot/asset",
+    "type":"library",
+    "description":"PHP class providing an asset object",
+    "keywords":["email"],
+    "homepage":"https://datapool.info",
+    "license":"MIT",
+    "authors":[{"name":"Carsten Wallenhauer","email":"admin@datapool.info"}],
+    "require":{
+        "php":">=8.0",
+    },
+    "autoload":{
+        "psr-4":{
+            "SourcePot\\Email\\":"src\\php"
+        }
+    }
+}
