@@ -10,13 +10,14 @@ declare(strict_types=1);
 
 namespace SourcePot\Asset;
 
+require_once('Rates.php');
+
 final class Asset{
 
     private const DEFAULT_UNIT='EUR';
     private const DEFAULT_TIMEZONE='Europe/Berlin';
     private const UNIT_ALIAS=['£'=>'GBP','€'=>'EUR','AU$'=>'AUD','$'=>'USD','US$'=>'USD'];
     
-
     private $asset=array();
     
     function __construct(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)
