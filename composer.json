@@ -11,7 +11,7 @@
     },
     "autoload":{
         "psr-4":{
-            "SourcePot\\Email\\":"src\\php"
+            "SourcePot\\Asset\\":"src\\php"
         }
     }
 }
