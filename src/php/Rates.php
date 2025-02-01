@@ -99,8 +99,11 @@ final class Rates{
         } catch (\Exception $e) {
             $error=$e->getMessage();
         }
-        if (empty($error) && isset($rates[$unit])){
-        $rate['unit']=$unit;
+        if (empty($error) && $unit==='*'){
+            $rates=array_merge($rate,$rates);
+            return $rates;
+        } else if (empty($error) && isset($rates[$unit])){
+            $rate['unit']=$unit;
             $rate['value']=$rates[$unit];
         } else if (empty($error) && !isset($rates[$unit])){
             throw new \Exception('E010: Unit "'.$unit.'"not available within rates.');
