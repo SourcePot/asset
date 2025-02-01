@@ -36,13 +36,15 @@ Amount (US):        USD 10.06
 Amount (DE):        10,06 USD
 Amount (DE full):   10,06 USD
 Amount (FR):        10.06 USD
-Warning:            **W001: "USD" rate for "2015-08-22" missing, rate dated "2015-08-21" used.**
+Warning:            W001: "USD" rate for "2015-08-22" missing, rate dated "2015-08-21" used.
 */
 ```
 
 ## Evaluation web page
 
-An evaluation web page is provided with this package. The webpage allows:
+An evaluation web page is provided with this package. 
+
+The webpage allows:
 1. flexible creation of an asset object, 
 2. asset conversion to US-Dollars and 
 3. adding yearly interest.
