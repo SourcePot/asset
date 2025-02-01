@@ -142,9 +142,6 @@ final class Asset{
         $this->setUnit($unit);
         $this->asset['value']+=$value;
         $this->setUnit($orgUnit);
-
-        var_dump($this->getArray());
-
     }
 }
 ?>
