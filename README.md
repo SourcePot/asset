@@ -10,4 +10,4 @@ $asset = new \SourcePot\Asset\Asset(1234.56,'JPY',new \DateTime("2015-08-23"));
 ```
 
 An evaluation web page is provided with this package. The webpage allows flexible creation of an asset object, it's conversion to US-Dollars and yearly interest added.
-<img src="./assets/evaluation-page.png.png" alt="Evaluation web page" style="width:100%"/>
+<img src="./assets/evaluation-page.png" alt="Evaluation web page" style="width:100%"/>
