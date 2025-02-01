@@ -21,7 +21,7 @@ $asset = new \SourcePot\Asset\Asset(1234.56,'JPY',new \DateTime("2015-08-23"));
 // setting a new unit, converting JPY to USD @2015-08-23
 $asset->setUnit("USD");
 
-// will show 10.06 USD (2015-08-21T23:00:00+01:00), the asset dateTime was adjusted to the exchange rate dateTime
+// will show 10.06 USD (2015-08-21T23:00:00+01:00), the asset property dateTime was adjusted to the exchange rate dateTime
 echo $asset; 
 ```
 
