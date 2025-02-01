@@ -15,13 +15,13 @@ require_once('../php/Asset.php');
 // asset object creation
 $asset = new \SourcePot\Asset\Asset(1234.56,'JPY',new \DateTime("2015-08-23"));
 
-// setting a new unit
+// setting a new unit, converting JPY to USD @2015-08-23
 $asset->setUnit("USD");
 
-// echo asset will show 10.06 USD (2015-08-21T23:00:00+01:00)
+// echo asset will show 10.06 USD (2015-08-21T23:00:00+01:00), the asset dateTime was adjusted to the exchange rate dateTime
 echo $asset; 
 
-// craeting an array from asset
+// creating an array from asset object
 $assetArr = $asset->getArray("USD");
 
 /*  The array content is: 
@@ -36,7 +36,7 @@ Amount (US):        USD 10.06
 Amount (DE):        10,06 USD
 Amount (DE full):   10,06 USD
 Amount (FR):        10.06 USD
-Warning:            W001: "USD" rate for "2015-08-22" missing, rate dated "2015-08-21" used.
+Warning:            *W001: "USD" rate for "2015-08-22" missing, rate dated "2015-08-21" used.*
 */
 ```
 
