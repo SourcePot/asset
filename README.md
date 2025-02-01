@@ -49,7 +49,7 @@ $asset->addAsset(100,'GBP',new \DateTime("2024-12-01"));
 echo $asset;
 ```
 
-Method `\SourcePot\Asset\Asset::guessAssetFromString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)` provides a string parser. The method loads the asset derived from the string to the asset object. 
+Method `\SourcePot\Asset\Asset::guessAssetFromString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)` provides a string parser. The method loads the asset derived from the string to the asset object. If the currency can't be derived, the default is used and if dateTime is not provided, `DateTime('now')` will be used.
 ```
 $asset->guessAssetFromString('AU$ 12.345,67');
 
