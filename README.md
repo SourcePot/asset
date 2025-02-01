@@ -36,7 +36,7 @@ Amount (US):        USD 10.06
 Amount (DE):        10,06 USD
 Amount (DE full):   10,06 USD
 Amount (FR):        10.06 USD
-Warning:            *W001: "USD" rate for "2015-08-22" missing, rate dated "2015-08-21" used.*
+Warning:            **W001: "USD" rate for "2015-08-22" missing, rate dated "2015-08-21" used.**
 */
 ```
 
