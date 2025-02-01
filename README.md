@@ -5,6 +5,10 @@ The asset class of this package can be used to create objects representing an as
 >[!NOTE]
 >European Central Bank exhchage rates are used. If an exchage rate is not yet present as csv-file in the data directory, it will be downloaded via the ECB API and saved to data directory. If an exchange rate is requested for a weekend (such as in the code sample below) or bank holiday, the latest valid exchange rate before that date will be used and a warning will be added as asset property.
 
+## Installation
+
+You can use Packagist to install the package on a web server or your lacal computer, e.g. *Command Prompt*, enter `composer create-project sourcepot/asset {add your target directory here}`. 
+
 ## Code Samples
 
 ```
