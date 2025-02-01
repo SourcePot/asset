@@ -7,7 +7,6 @@ The asset class of this package is used to create objects representing an asset.
 
 ## Code Sample
 
-
 ```
 require_once('../php/Rates.php');
 require_once('../php/Asset.php');
@@ -39,6 +38,13 @@ Amount (FR):        10.06 USD
 Warning:            W001: "USD" rate for "2015-08-22" missing, rate dated "2015-08-21" used.
 */
 ```
+An asset can be added to the asset object using the method `\SourcePot\Asset\Asset::addAsset(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)` and providing the respective asset properties. In the following example the asset is *100 EUR (2024-01-01T00:00:00+01:00)* and an amount of 100 GBP is added on December 01, 2024:  
+```
+$asset->addAsset(100,'GBP',new \DateTime("2024-12-01"));
+
+// The new asset is 220.19 EUR (2024-11-29T00:00:00+01:00), the date is set to the exchange rate date
+echo $asset;
+```
 
 ## Evaluation web page
 
@@ -49,4 +55,5 @@ The webpage allows:
 2. asset conversion to US-Dollars and 
 3. adding yearly interest.
 
+Here is a screenshot of the evaluation web page:
 <img src="./assets/evaluation-page.png" alt="Evaluation web page" style="width:100%"/>

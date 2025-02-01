@@ -99,6 +99,16 @@ final class Asset{
         return $this->asset['dateTime'];
     }
 
+    final public function getWarnings():string|bool
+    {
+        return $this->asset['Warning']??FALSE;
+    }
+
+    final public function getErrors():string|bool
+    {
+        return $this->asset['Warning']??FALSE;
+    }
+
     final public function addIntrestYearly(float $yearlyRatePercent=4,int $years=1):array
     {
         $steps=[0=>['dateTime'=>$this->asset['dateTime']->format('c'),'value'=>$this->asset['value'],'interest'=>0]];
@@ -113,15 +123,28 @@ final class Asset{
 
     final public function addIntrestMonthly(float $monthlyRatePercent=4,int $months=1):array
     {
+        $decimals=(isset(self::DECIMALS[$this->asset['unit']]))?self::DECIMALS[$this->asset['unit']]:self::DEFAULT_DECIMALS;
         $steps=[0=>['dateTime'=>$this->asset['dateTime']->format('c'),'value'=>$this->asset['value'],'interest'=>0]];
         for($month=1;$month<=$months;$month++){
             $this->asset['dateTime']->add(new \DateInterval('P1M'));
-            $interest=$this->asset['value']*$monthlyRatePercent/100;
+            $interest=round($this->asset['value'],$decimals)*$monthlyRatePercent/100;
             $this->asset['value']=$this->asset['value']+$interest;
             $steps[$month]=['dateTime'=>$this->asset['dateTime']->format('c'),'value'=>$this->asset['value'],'interest'=>$interest];
         }
         return $steps;
     }
+    
+    final public function addAsset(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)
+    {
+        $now=new \DateTime('now');
+        $this->setDateTime($dateTime??$now);
+        $orgUnit=$this->getUnit();
+        $this->setUnit($unit);
+        $this->asset['value']+=$value;
+        $this->setUnit($orgUnit);
 
+        var_dump($this->getArray());
+
+    }
 }
 ?>
