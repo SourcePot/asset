@@ -3,7 +3,10 @@
 The asset class of this package is used to create objects representing an asset. The main properties of an asset are "value", "unit" and "dateTime", e.g. 1 (value) Euro (unit) at 12/03/2023. These three properties need to be provided to the contructor of a new asset object. When a diffenrent unit is set, the exchangerate at the asset objects dateTime will be applied. 
 
 >[!NOTE]
->European Central Bank exhchage rates are used. If an exchage rate is not yet present as csv-file in the data directory, it will be downloaded via the ECB API and saved to data directory. If an exchange rate is requested for a weekend (such in the code sample below) or bank holiday, the latest valid exchange rate before that date will be used and a warning will be added as asset property.
+>European Central Bank exhchage rates are used. If an exchage rate is not yet present as csv-file in the data directory, it will be downloaded via the ECB API and saved to data directory. If an exchange rate is requested for a weekend (such as in the code sample below) or bank holiday, the latest valid exchange rate before that date will be used and a warning will be added as asset property.
+
+## Code Sample
+
 
 ```
 require_once('../php/Rates.php');
@@ -37,6 +40,11 @@ Warning:            W001: "USD" rate for "2015-08-22" missing, rate dated "2015-
 */
 ```
 
-An evaluation web page is provided with this package. The webpage allows flexible creation of an asset object, it's conversion to US-Dollars and yearly interest added.
+## Evaluation web page
+
+An evaluation web page is provided with this package. The webpage allows:
+1. flexible creation of an asset object, 
+2. asset conversion to US-Dollars and 
+3. adding yearly interest.
 
 <img src="./assets/evaluation-page.png" alt="Evaluation web page" style="width:100%"/>
