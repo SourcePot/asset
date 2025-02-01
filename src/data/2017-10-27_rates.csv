@@ -1,0 +1,36 @@
+KEY,FREQ,CURRENCY,CURRENCY_DENOM,EXR_TYPE,EXR_SUFFIX,TIME_PERIOD,OBS_VALUE,OBS_STATUS,OBS_CONF,OBS_PRE_BREAK,OBS_COM,TIME_FORMAT,BREAKS,COLLECTION,COMPILING_ORG,DISS_ORG,DOM_SER_IDS,PUBL_ECB,PUBL_MU,PUBL_PUBLIC,UNIT_INDEX_BASE,COMPILATION,COVERAGE,DECIMALS,NAT_TITLE,SOURCE_AGENCY,SOURCE_PUB,TITLE,TITLE_COMPL,UNIT,UNIT_MULT
+EXR.D.ARS.EUR.SP00.A,D,ARS,EUR,SP00,A,2017-10-27,20.4886,A,F,,Indicative rate,P1D,,A,,,,,,,,,,5,,4F0,,Euro/Argentine peso,"Indicative exchange rate, Euro/Argentine peso, 2:15 pm (C.E.T.)",ARS,0
+EXR.D.AUD.EUR.SP00.A,D,AUD,EUR,SP00,A,2017-10-27,1.5196,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Australian dollar,"ECB reference exchange rate, Euro/Australian dollar, 2:15 pm (C.E.T.)",AUD,0
+EXR.D.BGN.EUR.SP00.A,D,BGN,EUR,SP00,A,2017-10-27,1.9558,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Bulgarian lev,"ECB reference exchange rate, Euro/Bulgarian lev, 2:15 pm (C.E.T.)",BGN,0
+EXR.D.BRL.EUR.SP00.A,D,BRL,EUR,SP00,A,2017-10-27,3.8292,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Brazilian real,"ECB reference exchange rate, Euro/Brazilian real, 2:15 pm (C.E.T.)",BRL,0
+EXR.D.CAD.EUR.SP00.A,D,CAD,EUR,SP00,A,2017-10-27,1.4961,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Canadian dollar,"ECB reference exchange rate, Euro/Canadian dollar, 2:15 pm (C.E.T.)",CAD,0
+EXR.D.CHF.EUR.SP00.A,D,CHF,EUR,SP00,A,2017-10-27,1.1632,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Swiss franc,"ECB reference exchange rate, Euro/Swiss franc, 2:15 pm (C.E.T.)",CHF,0
+EXR.D.CNY.EUR.SP00.A,D,CNY,EUR,SP00,A,2017-10-27,7.7225,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Chinese yuan renminbi,"ECB reference exchange rate, Euro/Chinese yuan renminbi, 2:15 pm (C.E.T.)",CNY,0
+EXR.D.CZK.EUR.SP00.A,D,CZK,EUR,SP00,A,2017-10-27,25.673,A,F,,,P1D,,A,,,,,,,,,,3,,4F0,,Euro/Czech koruna,"ECB reference exchange rate, Euro/Czech koruna, 2:15 pm (C.E.T.)",CZK,0
+EXR.D.DKK.EUR.SP00.A,D,DKK,EUR,SP00,A,2017-10-27,7.4407,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Danish krone,"ECB reference exchange rate, Euro/Danish krone, 2:15 pm (C.E.T.)",DKK,0
+EXR.D.DZD.EUR.SP00.A,D,DZD,EUR,SP00,A,2017-10-27,133.7515,A,F,,Indicative rate,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Algerian dinar,"Indicative exchange rate, Euro/Algerian dinar, 2:15 pm (C.E.T.)",DZD,0
+EXR.D.GBP.EUR.SP00.A,D,GBP,EUR,SP00,A,2017-10-27,0.88633,A,F,,,P1D,,A,,,,,,,,,,5,,4F0,,Euro/UK pound sterling,"ECB reference exchange rate, Euro/UK pound sterling, 2:15 pm (C.E.T.)",GBP,0
+EXR.D.HKD.EUR.SP00.A,D,HKD,EUR,SP00,A,2017-10-27,9.0561,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Hong Kong dollar,"ECB reference exchange rate, Euro/Hong Kong dollar, 2:15 pm (C.E.T.)",HKD,0
+EXR.D.HRK.EUR.SP00.A,D,HRK,EUR,SP00,A,2017-10-27,7.5123,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Croatian kuna,"ECB reference exchange rate, Euro/Croatian kuna, 2:15 pm (C.E.T.)",HRK,0
+EXR.D.HUF.EUR.SP00.A,D,HUF,EUR,SP00,A,2017-10-27,311.23,A,F,,,P1D,,A,,,,,,,,,,2,,4F0,,Euro/Hungarian forint,"ECB reference exchange rate, Euro/Hungarian forint, 2:15 pm (C.E.T.)",HUF,0
+EXR.D.IDR.EUR.SP00.A,D,IDR,EUR,SP00,A,2017-10-27,15818.76,A,F,,,P1D,,A,,,,,,,,,,2,,4F0,,Euro/Indonesian rupiah,"ECB reference exchange rate, Euro/Indonesian rupiah, 2:15 pm (C.E.T.)",IDR,0
+EXR.D.ILS.EUR.SP00.A,D,ILS,EUR,SP00,A,2017-10-27,4.1116,A,F,,Indicative rate,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Israeli shekel,"ECB reference exchange rate, Euro/Israeli shekel, 2:15 pm (C.E.T.)",ILS,0
+EXR.D.INR.EUR.SP00.A,D,INR,EUR,SP00,A,2017-10-27,75.502,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Indian rupee,"ECB reference exchange rate, Euro/Indian rupee, 2:15 pm (C.E.T.)",INR,0
+EXR.D.JPY.EUR.SP00.A,D,JPY,EUR,SP00,A,2017-10-27,132.52,A,F,,,P1D,,A,,,,,,,,,,2,,4F0,,Euro/Japanese yen,"ECB reference exchange rate, Euro/Japanese yen, 2:15 pm (C.E.T.)",JPY,0
+EXR.D.KRW.EUR.SP00.A,D,KRW,EUR,SP00,A,2017-10-27,1309.39,A,F,,,P1D,,A,,,,,,,,,,2,,4F0,,Euro/Korean won (Republic),"ECB reference exchange rate, Euro/Korean won (Republic), 2:15 pm (C.E.T.)",KRW,0
+EXR.D.MAD.EUR.SP00.A,D,MAD,EUR,SP00,A,2017-10-27,11.0485,A,F,,Indicative rate,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Moroccan dirham,"Indicative exchange rate, Euro/Moroccan dirham, 2:15 pm (C.E.T.)",MAD,0
+EXR.D.MXN.EUR.SP00.A,D,MXN,EUR,SP00,A,2017-10-27,22.3514,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Mexican peso,"ECB reference exchange rate, Euro/Mexican peso, 2:15 pm (C.E.T.)",MXN,0
+EXR.D.MYR.EUR.SP00.A,D,MYR,EUR,SP00,A,2017-10-27,4.9228,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Malaysian ringgit,"ECB reference exchange rate, Euro/Malaysian ringgit, 2:15 pm (C.E.T.)",MYR,0
+EXR.D.NOK.EUR.SP00.A,D,NOK,EUR,SP00,A,2017-10-27,9.5348,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Norwegian krone,"ECB reference exchange rate, Euro/Norwegian krone, 2:15 pm (C.E.T.)",NOK,0
+EXR.D.NZD.EUR.SP00.A,D,NZD,EUR,SP00,A,2017-10-27,1.6975,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/New Zealand dollar,"ECB reference exchange rate, Euro/New Zealand dollar, 2:15 pm (C.E.T.)",NZD,0
+EXR.D.PHP.EUR.SP00.A,D,PHP,EUR,SP00,A,2017-10-27,60.174,A,F,,,P1D,,A,,,,,,,,,,3,,4F0,,Euro/Philippine peso,"ECB reference exchange rate, Euro/Philippine peso, 2:15 pm (C.E.T.)",PHP,0
+EXR.D.PLN.EUR.SP00.A,D,PLN,EUR,SP00,A,2017-10-27,4.2462,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Polish zloty,"ECB reference exchange rate, Euro/Polish zloty, 2:15 pm (C.E.T.)",PLN,0
+EXR.D.RON.EUR.SP00.A,D,RON,EUR,SP00,A,2017-10-27,4.601,A,F,,,P1D,,A,,,,,,,,"Before 1st July 2005 old Romanian leu (ROL) divided by 10,000 is used",,4,,4F0,,Euro/Romanian leu,"ECB reference exchange rate, Euro/Romanian leu, 2:15 pm (C.E.T.)",RON,0
+EXR.D.RUB.EUR.SP00.A,D,RUB,EUR,SP00,A,2017-10-27,67.8368,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Russian rouble/Euro,"ECB reference exchange rate, Russian rouble/Euro, 2:15 pm (C.E.T.)",RUB,0
+EXR.D.SEK.EUR.SP00.A,D,SEK,EUR,SP00,A,2017-10-27,9.739,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Swedish krona,"ECB reference exchange rate, Euro/Swedish krona, 2:15 pm (C.E.T.)",SEK,0
+EXR.D.SGD.EUR.SP00.A,D,SGD,EUR,SP00,A,2017-10-27,1.5899,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Singapore dollar,"ECB reference exchange rate, Euro/Singapore dollar, 2:15 pm (C.E.T.)",SGD,0
+EXR.D.THB.EUR.SP00.A,D,THB,EUR,SP00,A,2017-10-27,38.645,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/Thai baht,"ECB reference exchange rate, Euro/Thai baht, 2:15 pm (C.E.T.)",THB,0
+EXR.D.TRY.EUR.SP00.A,D,TRY,EUR,SP00,A,2017-10-27,4.4361,A,F,,,P1D,,A,,,,,,,,"Before 1st January 2005 Turkish lira (TRL) divided by 1,000,000 is used",,4,,4F0,,Euro/Turkish lira,"ECB reference exchange rate, Euro/Turkish lira, 2:15 pm (C.E.T.)",TRY,0
+EXR.D.TWD.EUR.SP00.A,D,TWD,EUR,SP00,A,2017-10-27,35.1179,A,F,,Indicative rate,P1D,,A,,,,,,,,,,3,,4F0,,Euro/New Taiwan dollar,"Indicative exchange rate, Euro/New Taiwan dollar, 2:15 pm (C.E.T.)",TWD,0
+EXR.D.USD.EUR.SP00.A,D,USD,EUR,SP00,A,2017-10-27,1.1605,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/US dollar,"ECB reference exchange rate, Euro/US dollar, 2:15 pm (C.E.T.)",USD,0
+EXR.D.ZAR.EUR.SP00.A,D,ZAR,EUR,SP00,A,2017-10-27,16.4855,A,F,,,P1D,,A,,,,,,,,,,4,,4F0,,Euro/South African rand,"ECB reference exchange rate, Euro/South African rand, 2:15 pm (C.E.T.)",ZAR,0

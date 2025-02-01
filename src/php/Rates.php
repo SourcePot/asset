@@ -15,28 +15,30 @@ use DateTimeZone;
 final class Rates{
 
     private const ECB_RATES_URL='https://data-api.ecb.europa.eu/service/data/EXR/D..EUR.SP00.A?format=csvdata&startPeriod={START}&endPeriod={END}';
-    private const ECB_TIMEZONE='Europe/Berlin';
-    private $currencies=[];
+    private const ECB_TIMEZONE='CET';
+    private $currencies=['EUR'=>'Euro'];
 
     function __construct()
     {
-        $this->getRates(new \DateTime('2025-01-15'));
+        $this->getRates(new \DateTime('2020-01-15'));
     }
 
-    public function getCurrencies():array{
+    final public function getCurrencies():array{
         return $this->currencies;
     }
 
-    public function getRates(\DateTime $dateTime):array
+    final public function getRates(\DateTime $dateTime):array
     {
-        $rates=['DateTime'=>$dateTime];
+        $rates=['DateTime'=>$dateTime,'EUR'=>1];
         $dateTime->setTimezone(new DateTimeZone(self::ECB_TIMEZONE));
+        $dateTimeEarliestStr='1999-01-04 15:00:00';
         $dateTimeCmpStr=$dateTime->format('Y-m-d').' 15:00:00';
         $dateTimeNow=new \DateTime('now',new DateTimeZone(self::ECB_TIMEZONE));
         $dateTimeNowCmpStr=$dateTimeNow->format('Y-m-d H:i:s');
         if ($dateTimeCmpStr>$dateTimeNowCmpStr){
-            $rates['Error']='Requested rate is not yet available. Try again past '.$dateTimeCmpStr.' CET.';
-            return $rates;
+            throw new \Exception('E001: Requested rate is not yet available. Rates will be available past '.$dateTimeCmpStr.' CET.');
+        } else if ($dateTime->format('Y-m-d H:i:s')<$dateTimeEarliestStr){
+            throw new \Exception('E002: Requested rate is pre-EUR and not available. Rates available from '.$dateTimeEarliestStr.' CET.');
         }
         $ratesFileName='../data/'.$dateTime->format('Y-m-d').'_rates.csv';
         if (!is_file($ratesFileName)){
@@ -45,11 +47,9 @@ final class Rates{
             $url=str_replace('{END}',$dateTime->format('Y-m-d'),$url);
             $csv=@file_get_contents($url);
             if ($csv===FALSE){
-                $rates['Error']='Failed to receive data from "'.$url.'"';
-                return $rates;
+                throw new \Exception('E005: Failed to receive data from "'.$url.'"');
             } else if (empty($csv)){
-                $rates['Error']='No rates available for this date.';
-                return $rates;
+                throw new \Exception('E003: No rates available for this date.');
             } else {
                 file_put_contents($ratesFileName,$csv);
             }
@@ -57,7 +57,11 @@ final class Rates{
         $ratesRaw=$this->csvFile2arr($ratesFileName);
         foreach($ratesRaw as $rate){
             $this->currencies[$rate['UNIT']]=str_replace('Euro/','',$rate['TITLE']);
-            $rates[$rate['UNIT']]=floatval($rate['OBS_VALUE']);
+            if (strlen($rate['OBS_VALUE'])===0){
+                throw new \Exception('E006: Invalid rate.');
+            } else {
+                $rates[$rate['UNIT']]=floatval($rate['OBS_VALUE']);
+            }
         }
         return $rates;
     }
@@ -78,5 +82,51 @@ final class Rates{
         fclose($file);
         return $resultArr;
     }
+
+    final public function getRate(\DateTime $dateTime, string $unit='USD',$recursionDepth=0,$requestedDateTime=''):array
+    {
+        $unit=strtoupper($unit);
+        $rate=['dateTime'=>$dateTime,'unit'=>$unit];
+        if ($unit==='EUR'){
+            $rate['value']=1;
+            return $rate;
+        }
+        try {
+            $error='';
+            $rates=$this->getRates($dateTime);
+        } catch (\Exception $e) {
+            $error=$e->getMessage();
+        }
+        if (empty($error) && isset($rates[$unit])){
+        $rate['unit']=$unit;
+            $rate['value']=$rates[$unit];
+        } else if (empty($error) && !isset($rates[$unit])){
+            throw new \Exception('E010: Unit "'.$unit.'"not available within rates.');
+        } else if ($recursionDepth>5){
+            throw new \Exception('E011: Recursivion depth "'.$recursionDepth.'" above threshold.');
+        } else if (strpos($error,'E001: ')===0){
+            $requestedDateTime=$dateTime->format('Y-m-d');
+            $dateTime=new \DateTime('yesterday');
+            $rate=$this->getRate($dateTime,$unit);
+            $rate['Warning']='W001: Futre "'.$unit.'" rate for "'.$requestedDateTime.'" missing, latest rate dated "'.$dateTime->format('Y-m-d').'" used.';
+        } else if (strpos($error,'E002: ')===0){
+            $requestedDateTime=$dateTime->format('Y-m-d');
+            $dateTime=new \DateTime('1999-01-05 15:00:00');
+            $rate=$this->getRate($dateTime,$unit);
+            $rate['Warning']='W002: Historic "'.$unit.'" rate for "'.$requestedDateTime.'" missing, earliest rate dated "'.$dateTime->format('Y-m-d').'" used.';
+        } else if (strpos($error,'E003: ')===0 || strpos($error,'E006: ')===0){
+            $requestedDateTime=$dateTime->format('Y-m-d');
+            $dateTime->sub(new \DateInterval('P1D'));
+            $rate=$this->getRate($dateTime,$unit,$recursionDepth+1,$requestedDateTime);
+            if (empty($rate['Error'])){
+                $rate['Warning']='W001: "'.$unit.'" rate for "'.$requestedDateTime.'" missing, rate dated "'.$dateTime->format('Y-m-d').'" used.';
+            }
+        } else {
+            $rate['value']=NULL;
+            $rate['Error']=$error;
+        }
+        return $rate;
+    }
+
 }
 ?>
