@@ -12,27 +12,25 @@ $asset = new \SourcePot\Asset\Asset(1234.56,'JPY',new \DateTime("2015-08-23"));
 // setting a new unit
 $asset->setUnit("USD");
 
-echo $asset; // will show 10.06 USD (2015-08-21T23:00:00+01:00) 
-```
+// echo asset will show 10.06 USD (2015-08-21T23:00:00+01:00)
+echo $asset; 
 
-
-```
+// craeting an array from asset
 $assetArr = $asset->getArray("USD");
-var_dump($assetArr);
 
-/*
+/*  The array content is: 
 object {11}
-ISO 8601:   2015-08-21T23:00:00+01:00
-RFC 2822:   Fri, 21 Aug 2015 23:00:00 +0100
-Timestamp:  1440194400
-Currency:   USD
-Amount:     10.06
-Amount de:  10,06
-Amount (US):    USD 10.06
-Amount (DE):    10,06 USD
+ISO 8601:           2015-08-21T23:00:00+01:00
+RFC 2822:           Fri, 21 Aug 2015 23:00:00 +0100
+Timestamp:          1440194400
+Currency:           USD
+Amount:             10.06
+Amount de:          10,06
+Amount (US):        USD 10.06
+Amount (DE):        10,06 USD
 Amount (DE full):   10,06 USD
-Amount (FR):    10.06 USD
-Warning:    W001: \"USD\" rate for \"2015-08-22\" missing, rate dated \"2015-08-21\" used.
+Amount (FR):        10.06 USD
+Warning:            W001: \"USD\" rate for \"2015-08-22\" missing, rate dated \"2015-08-21\" used.
 */
 ```
 
