@@ -23,7 +23,6 @@ echo $asset;
 
 Method `\SourcePot\Asset\Asset::getArray()` returns an array with derived asset properties including any warnings or errors.
 ```
-// creating an array from asset object
 $assetArr = $asset->getArray();
 
 /*  The array content is: 
