@@ -40,7 +40,9 @@ final class Rates{
         } else if ($dateTime->format('Y-m-d H:i:s')<$dateTimeEarliestStr){
             throw new \Exception('E002: Requested rate is pre-EUR and not available. Rates available from '.$dateTimeEarliestStr.' CET.');
         }
-        $ratesFileName='../data/'.$dateTime->format('Y-m-d').'_rates.csv';
+        $dir=str_replace('\src\php','\src\data',__DIR__);
+        if (!is_dir($dir)){mkdir($dir);}
+        $ratesFileName=$dir.'/'.$dateTime->format('Y-m-d').'_rates.csv';
         if (!is_file($ratesFileName)){
             $url=self::ECB_RATES_URL;
             $url=str_replace('{START}',$dateTime->format('Y-m-d'),$url);
