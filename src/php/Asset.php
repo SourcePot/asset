@@ -111,5 +111,17 @@ final class Asset{
         return $steps;
     }
 
+    final public function addIntrestMonthly(float $monthlyRatePercent=4,int $months=1):array
+    {
+        $steps=[0=>['dateTime'=>$this->asset['dateTime']->format('c'),'value'=>$this->asset['value'],'interest'=>0]];
+        for($month=1;$month<=$months;$month++){
+            $this->asset['dateTime']->add(new \DateInterval('P1M'));
+            $interest=$this->asset['value']*$monthlyRatePercent/100;
+            $this->asset['value']=$this->asset['value']+$interest;
+            $steps[$month]=['dateTime'=>$this->asset['dateTime']->format('c'),'value'=>$this->asset['value'],'interest'=>$interest];
+        }
+        return $steps;
+    }
+
 }
 ?>
