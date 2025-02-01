@@ -19,9 +19,12 @@ $asset->setUnit("USD");
 
 // echo asset will show 10.06 USD (2015-08-21T23:00:00+01:00), the asset dateTime was adjusted to the exchange rate dateTime
 echo $asset; 
+```
 
+Method `\SourcePot\Asset\Asset::getArray()` returns an array with derived asset properties including any warnings or errors.
+```
 // creating an array from asset object
-$assetArr = $asset->getArray("USD");
+$assetArr = $asset->getArray();
 
 /*  The array content is: 
 object {11}
