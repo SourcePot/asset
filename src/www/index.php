@@ -24,28 +24,8 @@ if (empty($_POST['unit'])){$unit='USD';} else {$unit=$_POST['unit'];}
 if (empty($_POST['dateTime'])){$dateTime='2025-01-15T16:00:00';} else {$dateTime=$_POST['dateTime'];}
 
 // compile html
-$html='<!DOCTYPE html>
-        <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-        <head>
-        <meta charset="utf-8">
-        <title>Asset</title>
-        <style>
-            *{font-family: system-ui;font-size:12px;}
-            h1{font-size:18px;}
-            h2{font-size:16px;}
-            tr:hover{background-color:#ccc;}
-            td{border-left:1px dotted #444;padding:2px;}
-            p{float:left;clear:both;}
-            embed{float:left;clear:both;max-width:30vw;}
-            div{float:left;clear:both;width:95vw;padding:0.25em 1em;}
-            div.control{background-color:antiquewhite;border:1px solid #000;}
-            table{float:left;clear:none;margin:1rem 1rem 1rem 0;border:1px solid #aaa;box-shadow:3px 3px 10px #777;}
-            caption{font-size:1.25rem;font-weight:bold;}
-            input[type=file]{background-color:white;}
-            input{cursor:pointer;}
-        </style>
-        </head>
-        <body><form name="892d183ba51083fc2a0b3d4d6453e20b" id="892d183ba51083fc2a0b3d4d6453e20b" method="post" enctype="multipart/form-data">';
+$html='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta charset="utf-8"><title>Asset</title><link type="text/css" rel="stylesheet" href="index.css"/></head>';
+$html.='<body><form name="892d183ba51083fc2a0b3d4d6453e20b" id="892d183ba51083fc2a0b3d4d6453e20b" method="post" enctype="multipart/form-data">';
 $html.='<h1>Evaluation Page for the Asset-Package</h1>';
 $html.='<div class="control"><h2>Asset properties for instantiation</h2>';
 $html.='<input type="text" pattern="[0-9.]*" value="'.$value.'" name="value" id="value" style="margin:0.25em;"/>';
