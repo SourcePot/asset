@@ -36,7 +36,8 @@ final class Asset{
 
     public function __toString()
     {
-        return $this->asset['value'].' '.$this->asset['unit'].' ('.$this->asset['dateTime']->format('c').')';
+        $decimals=(isset(self::DECIMALS[$this->asset['unit']]))?self::DECIMALS[$this->asset['unit']]:self::DEFAULT_DECIMALS;
+        return round($this->asset['value'],$decimals).' '.$this->asset['unit'].' ('.$this->asset['dateTime']->format('c').')';
     }
 
     final public function setValue(float $value)

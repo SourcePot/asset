@@ -61,7 +61,7 @@ $html.='</div>';
 $html.='</form>';
 
 // create asset
-$asset=new \SourcePot\Asset\Asset(floatval($value),$unit,new \DateTime($dateTime));
+$asset=new Asset(floatval($value),$unit,new \DateTime($dateTime));
 $html.='<table>';
 $html.='<caption>Asset instance ['.$unit.']</caption>';
 foreach($asset->getArray() as $key=>$value){
