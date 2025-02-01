@@ -62,6 +62,7 @@ $html.='</form>';
 
 // create asset
 $asset=new Asset(floatval($value),$unit,new \DateTime($dateTime));
+
 $html.='<table>';
 $html.='<caption>Asset instance ['.$unit.']</caption>';
 foreach($asset->getArray() as $key=>$value){

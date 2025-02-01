@@ -5,7 +5,7 @@ The asset class of this package is used to create objects representing an asset.
 >[!NOTE]
 >European Central Bank exhchage rates are used. If an exchage rate is not yet present as csv-file in the data directory, it will be downloaded via the ECB API and saved to data directory. If an exchange rate is requested for a weekend (such as in the code sample below) or bank holiday, the latest valid exchange rate before that date will be used and a warning will be added as asset property.
 
-## Code Sample
+## Code Samples
 
 ```
 require_once('../php/Rates.php');
@@ -17,7 +17,7 @@ $asset = new \SourcePot\Asset\Asset(1234.56,'JPY',new \DateTime("2015-08-23"));
 // setting a new unit, converting JPY to USD @2015-08-23
 $asset->setUnit("USD");
 
-// echo asset will show 10.06 USD (2015-08-21T23:00:00+01:00), the asset dateTime was adjusted to the exchange rate dateTime
+// will show 10.06 USD (2015-08-21T23:00:00+01:00), the asset dateTime was adjusted to the exchange rate dateTime
 echo $asset; 
 ```
 
@@ -46,6 +46,14 @@ An asset can be added to the asset object using the method `\SourcePot\Asset\Ass
 $asset->addAsset(100,'GBP',new \DateTime("2024-12-01"));
 
 // The new asset is 220.19 EUR (2024-11-29T00:00:00+01:00), the date is set to the exchange rate date
+echo $asset;
+```
+
+Method `\SourcePot\Asset\Asset::guessAssetFromString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)` provides a string parser. The method loads the asset derived from the string to the asset object. 
+```
+$asset->guessAssetFromString('AU$ 12.345,67');
+
+// The new asset is 12345.67 AUD (2025-02-01T19:50:30+01:00) 
 echo $asset;
 ```
 
