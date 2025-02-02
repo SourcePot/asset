@@ -13,27 +13,13 @@ namespace SourcePot\Asset;
 	
 mb_internal_encoding("UTF-8");
 
-require_once('../php/Asset.php');
-
-
-require_once('../php/DateTimeParser.php');
-
-$dateTimeParserObj=new DateTimeParser();
-
-$dateTimeParserObj->setFromString('Meeting on August 2., 2014 at 12:34:56 (Asia/Tokyo)');
-
-// the default timezon is Europe/Berlin, the parsed sting will return 2014-08-02T05:34:56+02:00
-echo $dateTimeParserObj;
-
-
 require_once('../php/Rates.php');
-
 $ratesObj=new Rates();
 $rates=$ratesObj->getCurrencies();
 
 if (empty($_POST['value'])){$value='123.45';} else {$value=$_POST['value'];}
-if (empty($_POST['unit'])){$unit='USD';} else {$unit=$_POST['unit'];}
-if (empty($_POST['dateTime'])){$dateTime='2025-01-15T16:00:00';} else {$dateTime=$_POST['dateTime'];}
+if (empty($_POST['unit'])){$unit='CHF';} else {$unit=$_POST['unit'];}
+if (empty($_POST['dateTime'])){$dateTime='31 August 2016 2:15pm (Europe/London)';} else {$dateTime=$_POST['dateTime'];}
 
 // compile html
 $html='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta charset="utf-8"><title>Asset</title><link type="text/css" rel="stylesheet" href="index.css"/></head>';
@@ -47,13 +33,17 @@ foreach($rates as $id=>$name){
     $html.='<option value="'.$id.'"'.$selected.'>'.$name.'</option>';
 }
 $html.='</select>';
-$html.='<input type="datetime-local" value="'.$dateTime.'" name="dateTime" id="dateTime" style="margin:0.25em;"/>';
+$html.='<input type="text" value="'.$dateTime.'" name="dateTime" id="dateTime" style="margin:0.25em;"/>';
 $html.='<input type="submit" name="set" id="set" style="margin:0.25em;" value="Set"/></div>';
 $html.='</div>';
 $html.='</form>';
 
-// create asset
-$asset=new Asset(floatval($value),$unit,new \DateTime($dateTime));
+require_once('../php/DateTimeParser.php');
+$dateTimeObj = new DateTimeParser();
+$dateTimeObj->setFromString($dateTime);
+
+require_once('../php/Asset.php');
+$asset=new Asset(floatval($value),$unit,$dateTimeObj->getDateTime());
 
 $html.='<table>';
 $html.='<caption>Asset instance ['.$unit.']</caption>';

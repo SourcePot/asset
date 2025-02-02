@@ -7,7 +7,7 @@ The following code examples require the namespace to be set to `namespace Source
 ## Features
 
 * Creation and manipulation of an Asset object representing a value, wealth, etc.
-* Creation of a Rates object providing currency names and exchange frates
+* Creation of a Rates object providing currency names and exchange rates
 * Creation of a DateTimeParser object providing representing a date and time at a specified timezone, parsing timestamps or strings to DateTimeParser object
 
 ## The Asset class

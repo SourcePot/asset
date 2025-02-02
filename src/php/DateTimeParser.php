@@ -127,6 +127,14 @@ final class DateTimeParser{
         return $this->isValid();
     }
 
+    final public function setTimezone(string|\DateTimeZone $timeZone)
+    {
+        if (!is_object($timeZone)){
+            $timeZone=new \DateTimeZone($timeZone);
+        }
+        $this->dateTime->setTimezone($timeeZone);
+    }
+
     /**
      * Date-time parser methods
      */
