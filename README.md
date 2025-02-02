@@ -4,6 +4,12 @@ You can use Packagist to install the package on a web server or your lacal compu
 
 The following code examples require the namespace to be set to `namespace SourcePot\Asset;`.
 
+## Features
+
+* Creation and manipulation of an Asset object representing a value, wealth, etc.
+* Creation of a Rates object providing currency names and exchange frates
+* Creation of a DateTimeParser object providing representing a date and time at a specified timezone, parsing timestamps or strings to DateTimeParser object
+
 ## The Asset class
 
 The asset class of this package can be used to create objects representing an asset. The main properties of such an asset are "value", "unit" and "dateTime", e.g. 1 (value) Euro (unit) at 12/03/2023. These three properties need to be provided to the contructor of a new asset object. If a different unit is set, the exchange rate is applied to the asset object and the dateTime will be updated to the excchange rate dateTime. 
