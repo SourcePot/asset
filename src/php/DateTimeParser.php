@@ -132,7 +132,7 @@ final class DateTimeParser{
         if (!is_object($timeZone)){
             $timeZone=new \DateTimeZone($timeZone);
         }
-        $this->dateTime->setTimezone($timeeZone);
+        $this->dateTime->setTimezone($timeZone);
     }
 
     /**
