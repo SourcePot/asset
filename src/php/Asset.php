@@ -11,12 +11,12 @@ declare(strict_types=1);
 namespace SourcePot\Asset;
 
 require_once('Rates.php');
+require_once('DateTimeParser.php');
 
 final class Asset{
 
     private const DEFAULT_UNIT='EUR';
     private const DEFAULT_DECIMALS=2;
-    private const DEFAULT_TIMEZONE='CET';
     private const UNIT_ALIAS=['£'=>'GBP','€'=>'EUR','AU$'=>'AUD','$'=>'USD','US$'=>'USD'];
     private const DECIMALS=['XPF'=>0,'XAF'=>0,'VUV'=>0,'UGX'=>0,'TND'=>3,'RWF'=>0,'OMR'=>3,'PYG'=>0,'LYD'=>3,'KRW'=>0,'KWD'=>3,'KMF'=>0,'JPY'=>0,'JOD'=>3,'IQD'=>3,'IDR'=>0,'GNF'=>0,'DJF'=>0,'CVE'=>0,'BHD'=>3];
     private $currencies=[];

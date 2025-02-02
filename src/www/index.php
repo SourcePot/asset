@@ -13,8 +13,20 @@ namespace SourcePot\Asset;
 	
 mb_internal_encoding("UTF-8");
 
-require_once('../php/Rates.php');
 require_once('../php/Asset.php');
+
+
+require_once('../php/DateTimeParser.php');
+
+$dateTimeParserObj=new DateTimeParser();
+
+$dateTimeParserObj->setFromString('Meeting on August 2., 2014 at 12:34:56 (Asia/Tokyo)');
+
+// the default timezon is Europe/Berlin, the parsed sting will return 2014-08-02T05:34:56+02:00
+echo $dateTimeParserObj;
+
+
+require_once('../php/Rates.php');
 
 $ratesObj=new Rates();
 $rates=$ratesObj->getCurrencies();
