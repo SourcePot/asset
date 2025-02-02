@@ -17,7 +17,7 @@ The Asset class
 require_once('../php/Asset.php');
 
 // asset object creation
-$asset = new sset(1234.56,'JPY',new \DateTime("2015-08-23"));
+$asset = new Asset(1234.56,'JPY',new \DateTime("2015-08-23"));
 
 // setting a new unit, converting JPY to USD @2015-08-23
 $asset->setUnit("USD");
