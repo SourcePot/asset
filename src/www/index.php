@@ -45,6 +45,21 @@ $dateTimeObj->setFromString($dateTime);
 require_once('../php/Asset.php');
 $asset=new Asset(floatval($value),$unit,$dateTimeObj->getDateTime());
 
+// print dateTime
+$html.='<table>';
+$html.='<caption>DateTimeParser object</caption>';
+foreach($dateTimeObj->getArray() as $key=>$value){
+    if (is_object($value)){
+        $value=$value->format('Y-m-d');
+    } else if (is_bool($value)){
+        $value=($value)?'TRUE':'FALSE';
+    }
+    $html.='<tr><td>'.$key.'</td><td>'.$value.'</td></tr>';
+}
+$html.='</table>';
+
+
+// print asset
 $html.='<table>';
 $html.='<caption>Asset instance ['.$unit.']</caption>';
 foreach($asset->getArray() as $key=>$value){

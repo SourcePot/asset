@@ -55,7 +55,7 @@ final class DateTimeParser{
 
     final public function isValid():bool
     {
-        return ($this->dateTime->format('d')!=='01' && $this->dateTime->format('m')!=='01' && $this->dateTime->format('Y')!=='0000');;
+        return !($this->dateTime->format('d')==='01' && $this->dateTime->format('m')==='01' && $this->dateTime->format('Y')==='0000');
     }
 
     final public function getDateTime():\DateTime
