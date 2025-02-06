@@ -10,8 +10,6 @@ declare(strict_types=1);
 
 namespace SourcePot\Asset;
 
-require_once('Rates.php');
-
 final class DateTimeParser{
 
     private const DEFAULT_TIMEZONE='Europe/Berlin';

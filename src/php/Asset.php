@@ -33,6 +33,47 @@ final class Asset{
         $this->asset['Currency']=$this->currencies[$unit]??'';
     }
 
+    public function __toString()
+    {
+        $decimals=(isset(self::DECIMALS[$this->asset['unit']]))?self::DECIMALS[$this->asset['unit']]:self::DEFAULT_DECIMALS;
+        return round($this->asset['value'],$decimals).' '.$this->asset['unit'].' ('.$this->asset['dateTime']->format('c').')';
+    }
+
+    /**
+     * Setter methods
+     */
+
+     final public function setValue(float $value)
+     {
+         $this->asset['value']=$value;
+     }
+ 
+     final public function setDateTime(\DateTime $dateTime)
+     {
+         $this->asset['dateTime']=$dateTime;
+     }
+ 
+    final public function setUnit(string $unit)
+    {
+        $unit=$this->normalizeUnit($unit);
+        if ($unit!==$this->asset['unit']){
+            $errors=$warnings=[];
+            $rates=new Rates();
+            $targetRate=$rates->getRate($this->asset['dateTime'],$unit);
+            $sourceRate=$rates->getRate($this->asset['dateTime'],$this->asset['unit']);
+            $this->asset['value']=$this->asset['value']*$targetRate['value']/$sourceRate['value'];
+            $this->asset['unit']=$unit;
+            $this->asset['Currency']=$this->currencies[$unit]??'';
+            $this->asset['string']='';
+            if (isset($sourceRate['Error'])){$errors[]=$sourceRate['Error'];}
+            if (isset($targetRate['Error'])){$errors[]=$targetRate['Error'];}
+            if (isset($sourceRate['Warning'])){$warnings[]=$sourceRate['Warning'];}
+            if (isset($targetRate['Warning'])){$warnings[]=$targetRate['Warning'];}
+            if (!empty($warnings)){$this->asset['Warning']=implode('|',$warnings);}
+            if (!empty($errors)){$this->asset['Error']=implode('|',$errors);}
+        }
+    }
+
     final public function guessAssetFromString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)
     {
         $now=new \DateTime('now');
@@ -90,48 +131,15 @@ final class Asset{
         $this->asset=$newAsset;
     }
 
-    private function normalizeUnit(string $unit):string{
-        $unit=strtoupper($unit);
-        return self::UNIT_ALIAS[$unit]??$unit;
-    }
+    /**
+     * Getter methods
+     */
 
-    public function __toString()
+    public function get():array
     {
-        $decimals=(isset(self::DECIMALS[$this->asset['unit']]))?self::DECIMALS[$this->asset['unit']]:self::DEFAULT_DECIMALS;
-        return round($this->asset['value'],$decimals).' '.$this->asset['unit'].' ('.$this->asset['dateTime']->format('c').')';
+        return $this->asset;
     }
-
-    final public function setValue(float $value)
-    {
-        $this->asset['value']=$value;
-    }
-
-    final public function setDateTime(\DateTime $dateTime)
-    {
-        $this->asset['dateTime']=$dateTime;
-    }
-
-    final public function setUnit(string $unit)
-    {
-        $unit=$this->normalizeUnit($unit);
-        if ($unit!==$this->asset['unit']){
-            $errors=$warnings=[];
-            $rates=new Rates();
-            $targetRate=$rates->getRate($this->asset['dateTime'],$unit);
-            $sourceRate=$rates->getRate($this->asset['dateTime'],$this->asset['unit']);
-            $this->asset['value']=$this->asset['value']*$targetRate['value']/$sourceRate['value'];
-            $this->asset['unit']=$unit;
-            $this->asset['Currency']=$this->currencies[$unit]??'';
-            $this->asset['string']='';
-            if (isset($sourceRate['Error'])){$errors[]=$sourceRate['Error'];}
-            if (isset($targetRate['Error'])){$errors[]=$targetRate['Error'];}
-            if (isset($sourceRate['Warning'])){$warnings[]=$sourceRate['Warning'];}
-            if (isset($targetRate['Warning'])){$warnings[]=$targetRate['Warning'];}
-            if (!empty($warnings)){$this->asset['Warning']=implode('|',$warnings);}
-            if (!empty($errors)){$this->asset['Error']=implode('|',$errors);}
-        }
-    }
-
+    
     public function getArray():array
     {
         $decimals=(isset(self::DECIMALS[$this->asset['unit']]))?self::DECIMALS[$this->asset['unit']]:self::DEFAULT_DECIMALS;
@@ -170,6 +178,15 @@ final class Asset{
     final public function getErrors():string|bool
     {
         return $this->asset['Warning']??FALSE;
+    }
+
+    /**
+     * Feature methods
+     */
+
+    private function normalizeUnit(string $unit):string{
+        $unit=strtoupper($unit);
+        return self::UNIT_ALIAS[$unit]??$unit;
     }
 
     final public function addIntrestYearly(float $yearlyRatePercent=4,int $years=1):array
