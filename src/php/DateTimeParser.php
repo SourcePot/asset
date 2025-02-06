@@ -46,6 +46,11 @@ final class DateTimeParser{
      * Getter methods
      */
 
+    final public function get():\DateTime
+    {
+        return $this->dateTime;
+    }
+
     final public function __toString():string
     {
         return $this->dateTime->format('c');
