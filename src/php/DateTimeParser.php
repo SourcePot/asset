@@ -87,7 +87,18 @@ final class DateTimeParser{
      * Setter methods
      */
 
-     final public function setFromTimestamp($timestamp)
+    final public function set($dateTime)
+    {
+        if (is_object($dateTime)){
+            $this->dateTime=$dateTime;
+        } else if (is_integer($dateTime)){
+            $this->dateTime=$this->setFromTimestamp($dateTime);
+        } else {
+            $this->dateTime=$this->setFromString($dateTime);
+        }
+    }
+    
+    final public function setFromTimestamp($timestamp)
     {
         $timestamp=intval($timestamp);
         $this->dateTime=new \DateTime('@'.$timestamp);
