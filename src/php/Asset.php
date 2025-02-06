@@ -10,7 +10,8 @@ declare(strict_types=1);
 
 namespace SourcePot\Asset;
 
-require_once('Rates.php');
+require_once('../../vendor/autoload.php');
+
 
 final class Asset{
 

@@ -39,7 +39,7 @@ final class DateTimeParser{
     function __construct(\DateTime $dateTime=NULL)
     {
         $now=new \DateTime('now');
-        $this->$dateTime=$dateTime??$now;
+        $this->dateTime=$dateTime??$now;
     }
 
     /**
@@ -97,9 +97,9 @@ final class DateTimeParser{
         if (is_object($dateTime)){
             $this->dateTime=$dateTime;
         } else if (is_integer($dateTime)){
-            $this->dateTime=$this->setFromTimestamp($dateTime);
+            $this->setFromTimestamp($dateTime);
         } else {
-            $this->dateTime=$this->setFromString($dateTime);
+            $this->setFromString($dateTime);
         }
     }
     
