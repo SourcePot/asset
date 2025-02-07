@@ -115,26 +115,26 @@ final class DateTimeParser{
         $this->dateTime=new \DateTime('@'.$unixTimestamp);
     }
 
-    final public function setFromString(string $string,\DateTimeZone $timeeZone=new \DateTimeZone(self::DEFAULT_TIMEZONE)):bool
+    final public function setFromString(string $string,\DateTimeZone $timeZone=new \DateTimeZone(self::DEFAULT_TIMEZONE)):bool
     {
         // is numeric
         if (is_numeric($string)){
             $dateTimeArr=$this->numeric2dateTimeArr($string);
             $string=$dateTimeArr['date'].' '.$dateTimeArr['time'];
-            $this->dateTime=new \DateTime($string,$timeeZone);
+            $this->dateTime=new \DateTime($string,$timeZone);
         } else {
             // detect valid dateTime string
             try {
-                $this->dateTime=new \DateTime($string,$timeeZone);
+                $this->dateTime=new \DateTime($string,$timeZone);
             } catch (\Exception $e){
                 $dateTimeArr=$this->str2dateTimeArr($string);
                 $string=$dateTimeArr['date'].' '.$dateTimeArr['time'];
                 if (empty($dateTimeArr['timezone'])){
-                    $this->dateTime=new \DateTime($string,$timeeZone);
+                    $this->dateTime=new \DateTime($string,$timeZone);
                 } else {
                     $parsedTimeeZone=new \DateTimeZone($dateTimeArr['timezone']);
                     $this->dateTime=new \DateTime($string,$parsedTimeeZone);
-                    $this->dateTime->setTimezone($timeeZone);
+                    $this->dateTime->setTimezone($timeZone);
                 }
             }
         }
@@ -177,17 +177,6 @@ final class DateTimeParser{
             $dateTimeArr['timezone']=$timezoneStr;
             break;
         }
-        // parse date
-        $string=$this->normalizeDEdateString($string);
-        $string=$this->normalizeUSdateString($string);
-        $string=$this->normalizeUKdateString($string);
-        $string=$this->normalizeTextDateString($string);
-        preg_match('/\{([0-9]{4}-[0-9]{2}-[0-9]{2})\}/',$string,$match);
-        if (isset($match[1])){
-            // valid date detected
-            $string=str_replace($match[0],'',$string);
-            $dateTimeArr['date']=$match[1];
-        }
         // parse time
         $string=$this->normalizeSystemTimeString($string);
         $string=$this->normalizeUKtimeString($string);
@@ -196,6 +185,18 @@ final class DateTimeParser{
             // valid time detected
             $string=str_replace($match[0],'',$string);
             $dateTimeArr['time']=$match[1];
+        }
+        // parse date
+        $string=$this->normalizeDEdateString($string);
+        $string=$this->normalizeUSdateString($string);
+        $string=$this->normalizeUKdateString($string);
+        $string=$this->normalizeSystemdateString($string);
+        $string=$this->normalizeTextDateString($string);
+        preg_match('/\{([0-9]{4}-[0-9]{2}-[0-9]{2})\}/',$string,$match);
+        if (isset($match[1])){
+            // valid date detected
+            $string=str_replace($match[0],'',$string);
+            $dateTimeArr['date']=$match[1];
         }
         return $dateTimeArr;
     }
@@ -206,14 +207,11 @@ final class DateTimeParser{
     
     private function normalizeSystemTimeString(string $string):string
     {
-        $tmpString=' '.str_replace(' ','',$string).' ';
+        $tmpString=' '.$string.' ';
         // detect 12:34:56
-        preg_match('/[^0-9]([0-2]{0,1}[0-9])[:]([0-5]{0,1}[0-9])[:]([0-5]{0,1}[0-9])[^0-9]/',$tmpString,$match);
+        preg_match('/[^0-9]([0-2][0-9][:][0-5][0-9][:][0-5][0-9])[^0-9]/',$tmpString,$match);
         if (isset($match[0])){
-            $time=$this->createTimeStr($match[3],$match[2],$match[1]);
-            if ($time){
-                return str_replace($match[0],'{'.$time.'}',$tmpString);
-            }
+            return str_replace($match[0],'{'.$match[1].'}',$tmpString);
         }
         return $string;
     }
@@ -356,6 +354,17 @@ final class DateTimeParser{
             if ($date){
                 return str_replace($match[0],'{'.$date.'}',$tmpString);
             }
+        }
+        return $string;
+    }
+
+    private function normalizeSystemdateString(string $string):string
+    {
+        // detect US format 2011-08-31
+        $tmpString=' '.str_replace(' ','',$string).' ';
+        preg_match('/[^0-9]([0-9]{4}[\-][0-1]{0,1}[0-9][\-][0-3]{1}[0-9]{1})[^0-9]/',$tmpString,$match);
+        if (isset($match[1])){
+            return str_replace($match[0],'{'.$match[1].'}',$tmpString);
         }
         return $string;
     }
