@@ -332,10 +332,9 @@ final class DateTimeParser{
     {
         // detect DE format 31.08.2011
         $tmpString=' '.str_replace(' ','',$string).' ';
-        preg_match('/[^0-9]([0-3]{0,1}[0-9][.][0-1]{0,1}[0-9][.][0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[1])){
-            $dateComps=explode('.',$match[1]);
-            $date=$this->createDateStr($dateComps[0],$dateComps[1],$dateComps[2]);
+        preg_match('/[^0-9]([0-3]{0,1}[0-9])[.]([0-1]{0,1}[0-9])[.]([0-9]{2,4})[^0-9]/',$tmpString,$match);
+        if (isset($match[0])){
+            $date=$this->createDateStr($match[1],$match[2],$match[3]);
             if ($date){
                 return str_replace($match[0],'{'.$date.'}',$tmpString);
             }
@@ -347,10 +346,9 @@ final class DateTimeParser{
     {
         // detect US format 08-31-11
         $tmpString=' '.str_replace(' ','',$string).' ';
-        preg_match('/[^0-9]([0-1]{0,1}[0-9][\-][0-3]{0,1}[0-9][\-][0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[1])){
-            $dateComps=explode('-',$match[1]);
-            $date=$this->createDateStr($dateComps[1],$dateComps[0],$dateComps[2]);
+        preg_match('/[^0-9]([0-1]{0,1}[0-9])[\-]([0-3]{0,1}[0-9])[\-]([0-9]{2,4})[^0-9]/',$tmpString,$match);
+        if (isset($match[0])){
+            $date=$this->createDateStr($match[2],$match[1],$match[3]);
             if ($date){
                 return str_replace($match[0],'{'.$date.'}',$tmpString);
             }
@@ -371,17 +369,16 @@ final class DateTimeParser{
 
     private function normalizeUKdateString(string $string):string
     {
-        $tmpString=' '.str_replace(' ','',$string).' ';
-        preg_match('/[^0-9]([0-3]{0,1}[0-9][\/][0-3]{0,1}[0-9][\/][0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[1])){
-            $dateComps=explode('/',$match[1]);
+        $tmpString=' '.$string.' ';
+        preg_match('/[^0-9]([0-3]{0,1}[0-9])[\/]([0-3]{0,1}[0-9])[\/]([0-9]{2,4})[^0-9]/',$tmpString,$match);
+        if (isset($match[0])){
             // try UK format 31/08/2011
-            $date=$this->createDateStr($dateComps[0],$dateComps[1],$dateComps[2]);
+            $date=$this->createDateStr($match[1],$match[2],$match[3]);
             if ($date){
                 return str_replace($match[0],'{'.$date.'}',$tmpString);
             } else {
                 // try US format 08/31/2011
-                $date=$this->createDateStr($dateComps[1],$dateComps[0],$dateComps[2]);
+                $date=$this->createDateStr($match[2],$match[1],$match[3]);
                 if ($date){
                     return str_replace($match[0],'{'.$date.'}',$tmpString);
                 }
