@@ -9,6 +9,8 @@ The following code examples require the namespace to be set to `namespace Source
 * Creation and manipulation of an Asset object representing a value, wealth, etc.
 * Creation of a Rates object providing currency names and exchange rates
 * Creation of a DateTimeParser object providing representing a date and time at a specified timezone, parsing timestamps or strings to DateTimeParser object
+* Calculations employ the `moneyphp/money` and BC Math
+
 
 ## The Asset class
 
@@ -23,12 +25,12 @@ The Asset class
 require_once('../php/Asset.php');
 
 // asset object creation
-$asset = new Asset(1234.56,'JPY',new \DateTime("2015-08-23"));
+$asset = new Asset(100000,'GBP',new \DateTime("2016-08-31T12:00:00+01:00"));
 
-// setting a new unit, converting JPY to USD @2015-08-23
-$asset->setUnit("USD");
+// setting a new unit, converting GBP to USD @2016-08-31
+$asset->convert2unit('USD');
 
-// will show 10.06 USD (2015-08-21T23:00:00+01:00), the asset property dateTime was adjusted to the exchange rate dateTime
+// will show 131264.20 USD (2016-08-31T12:00:00+01:00), the asset property dateTime was adjusted to the exchange rate dateTime
 echo $asset; 
 ```
 
@@ -53,17 +55,17 @@ Warning:            W001: "USD" rate for "2015-08-22" missing, rate dated "2015-
 ```
 An asset can be added to the asset object using the method `\SourcePot\Asset\Asset::addAsset(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)` and providing the respective asset properties. In the following example the asset is *100 EUR (2024-01-01T00:00:00+01:00)* and an amount of 100 GBP is added on December 01, 2024:  
 ```
-$asset->addAsset(100,'GBP',new \DateTime("2024-12-01"));
+$asset->addAssetString('1000000 JPY');
 
-// The new asset is 220.19 EUR (2024-11-29T00:00:00+01:00), the date is set to the exchange rate date
+// The new asset is 107373.00 GBP (2016-08-31T12:00:00+01:00), the date is set to the exchange rate date
 echo $asset;
 ```
 
-Method `\SourcePot\Asset\Asset::guessAssetFromString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)` provides a string parser. The method loads the asset derived from the string to the asset object. If the currency can't be derived, the default is used and if dateTime is not provided, `DateTime('now')` will be used.
+Method `\SourcePot\Asset\Asset::setFromString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)` provides a string parser. The method loads the asset derived from the string to the asset object. If the currency can't be derived, the default is used and if dateTime is not provided, `DateTime('now')` will be used.
 ```
-$asset->guessAssetFromString('AU$ 12.345,67');
+$asset->setFromString('AU$ 12.345,67');
 
-// The new asset is 12345.67 AUD (2025-02-01T19:50:30+01:00) 
+// The new asset is 12345.67 AUD (2025-02-22T15:41:26+01:00)
 echo $asset;
 ```
 
@@ -95,7 +97,7 @@ $dateTimeParserObj->setFromString('Meeting on August 2., 2014 at 12:34:56 (Asia/
 echo $dateTimeParserObj;
 ```
 
-// the default timezon is Europe/Berlin, the parsed sting will return 2014-08-02T05:34:56+02:00
+// the default timezone is Europe/Berlin, the parsed sting will return 2014-08-02T05:34:56+02:00
 echo $asset;
 
 # Evaluation web page

@@ -8,7 +8,7 @@ import("https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm").then((Plot)=>
                 Plot.areaY(data, {x: "Date", y: "Amount", fillOpacity: 0.2}),
                 Plot.lineY(data, {x: "Date", y: "Amount"})
               ],
-            marginLeft: 30    
+            marginLeft: 70    
             };
         const plot=Plot.plot(plotDef);
         jQuery('[id=myplot]').html(plot);

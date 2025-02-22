@@ -17,8 +17,8 @@ require_once('../php/Rates.php');
 $ratesObj=new Rates();
 $rates=$ratesObj->getCurrencies();
 
-if (empty($_POST['value'])){$value='123.45';} else {$value=$_POST['value'];}
-if (empty($_POST['unit'])){$unit='CHF';} else {$unit=$_POST['unit'];}
+if (empty($_POST['value'])){$value='100000';} else {$value=$_POST['value'];}
+if (empty($_POST['unit'])){$unit='GBP';} else {$unit=$_POST['unit'];}
 if (empty($_POST['dateTime'])){$dateTime='31 August 2016 2:15pm (Europe/London)';} else {$dateTime=$_POST['dateTime'];}
 
 // compile html
@@ -73,13 +73,13 @@ $html.='</table>';
 // derived asset
 try {
     $unit='USD';
-    $asset->setUnit($unit);
+    $asset->convert2unit($unit);
     $assetArr=$asset->getArray();
 } catch (\Exception $e) {
     $assetArr=['Error'=>$e->getMessage()];
 }
 $html.='<table>';
-$html.='<caption>Asset instance set unit to "'.$unit.'"</caption>';
+$html.='<caption>Asset instance converted to "'.$unit.'"</caption>';
 foreach($assetArr as $key=>$value){
     if (is_object($value)){
         $value=$value->format('Y-m-d');
@@ -89,12 +89,24 @@ foreach($assetArr as $key=>$value){
 $html.='</table>';
 
 // add interest
-$interestRate=4;
-$years=20;
-$steps=$asset->addIntrestYearly($interestRate,$years);
+$interestRate=5;
+$years=15;
+$steps=$asset->addIntrest('P1Y',$years,$interestRate);
 $html.='<table>';
-$html.='<caption>Added interest at '.$interestRate.'% over '.$years.' years</caption>';
+$html.='<caption>Investment at '.$interestRate.'% over '.$years.' years</caption>';
 foreach($asset->getArray() as $key=>$value){
+    if (is_object($value)){
+        $value=$value->format('Y-m-d');
+    }
+    $html.='<tr><td>'.$key.'</td><td>'.$value.'</td></tr>';
+}
+$html.='</table>';
+
+// fixed rate Mortgage
+$result=$asset->fixedRateMortgage($asset->get('value'),$interestRate, $monthlyPayment=2800);
+$html.='<table>';
+$html.='<caption>Sample fixed rate mortgage for '.$asset->get('value').' '.$asset->get('unit').',monthly repayment '.$monthlyPayment.', interest rate '.$interestRate.'%</caption>';
+foreach($result as $key=>$value){
     if (is_object($value)){
         $value=$value->format('Y-m-d');
     }
@@ -104,7 +116,7 @@ $html.='</table>';
 
 // add plot
 $jsDataStr='';
-$html.='<div><h3>Added interest at '.$interestRate.'% over '.$years.' years</h3><div id="myplot"></div></div>';
+$html.='<div><h3>Investment at '.$interestRate.'% over '.$years.' years</h3><div id="myplot"></div></div>';
 foreach($steps as $year=>$data){
     if (empty($jsDataStr)){
         $jsDataStr.='{Date: new Date("'.$data['dateTime'].'"), Interest:'.$data['interest'].', Amount:'.$data['value'].'}';

@@ -113,7 +113,7 @@ final class Rates{
             $requestedDateTime=$dateTime->format('Y-m-d');
             $dateTime=new \DateTime('yesterday');
             $rate=$this->getRate($dateTime,$unit);
-            $rate['Warning']='W001: Futre "'.$unit.'" rate for "'.$requestedDateTime.'" missing, latest rate dated "'.$dateTime->format('Y-m-d').'" used.';
+            $rate['Warning']='W001: Future "'.$unit.'" rate for "'.$requestedDateTime.'" missing, latest rate dated "'.$dateTime->format('Y-m-d').'" used.';
         } else if (strpos($error,'E002: ')===0){
             $requestedDateTime=$dateTime->format('Y-m-d');
             $dateTime=new \DateTime('1999-01-05 15:00:00');

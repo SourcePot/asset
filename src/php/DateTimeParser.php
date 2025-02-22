@@ -218,7 +218,7 @@ final class DateTimeParser{
 
     private function normalizeUKtimeString(string $string):string
     {
-        $tmpString=' '.str_replace(' ','',strtolower($string)).' ';
+        $tmpString=' '.strtolower($string).' ';
         // detect 12:34pm
         preg_match('/[^0-9]([0-1]{0,1}[0-9])[:.]([0-5]{0,1}[0-9])([apm]{2})[^apm]/',$tmpString,$match);
         if (isset($match[0])){
@@ -331,7 +331,7 @@ final class DateTimeParser{
     private function normalizeDEdateString(string $string):string
     {
         // detect DE format 31.08.2011
-        $tmpString=' '.str_replace(' ','',$string).' ';
+        $tmpString=' '.$string.' ';
         preg_match('/[^0-9]([0-3]{0,1}[0-9])[.]([0-1]{0,1}[0-9])[.]([0-9]{2,4})[^0-9]/',$tmpString,$match);
         if (isset($match[0])){
             $date=$this->createDateStr($match[1],$match[2],$match[3]);
@@ -345,7 +345,7 @@ final class DateTimeParser{
     private function normalizeUSdateString(string $string):string
     {
         // detect US format 08-31-11
-        $tmpString=' '.str_replace(' ','',$string).' ';
+        $tmpString=' '.$string.' ';
         preg_match('/[^0-9]([0-1]{0,1}[0-9])[\-]([0-3]{0,1}[0-9])[\-]([0-9]{2,4})[^0-9]/',$tmpString,$match);
         if (isset($match[0])){
             $date=$this->createDateStr($match[2],$match[1],$match[3]);
@@ -359,7 +359,7 @@ final class DateTimeParser{
     private function normalizeSystemdateString(string $string):string
     {
         // detect US format 2011-08-31
-        $tmpString=' '.str_replace(' ','',$string).' ';
+        $tmpString=' '.$string.' ';
         preg_match('/[^0-9]([0-9]{4}[\-][0-1]{0,1}[0-9][\-][0-3]{1}[0-9]{1})[^0-9]/',$tmpString,$match);
         if (isset($match[1])){
             return str_replace($match[0],'{'.$match[1].'}',$tmpString);
