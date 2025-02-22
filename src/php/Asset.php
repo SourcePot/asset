@@ -135,7 +135,7 @@ final class Asset{
             }
         }
         // set template
-        $asset=['unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime??(new \DateTime('now'))];
+        $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime??(new \DateTime('now'))];
         $asset['Currency']=$this->currencies[$asset['unit']];
         // recover value
         preg_match('/[+\-]{0,1}[0-9,.]+[eE+\-]{0,2}[0-9]+/',$string,$match);
@@ -169,7 +169,6 @@ final class Asset{
             }
             $asset['value string']=$numberStr;
             $asset['value']=floatval($numberStr);
-            $asset['Currency']=$this->currencies[$asset['unit']]??NULL;
         }
         return $asset;
     }
