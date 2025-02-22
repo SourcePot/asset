@@ -170,8 +170,8 @@ final class Asset{
             $asset['value string']=$numberStr;
             $asset['value']=floatval($numberStr);
             $asset['Currency']=$this->currencies[$asset['unit']]??NULL;
-            return $asset;
         }
+        return $asset;
     }
 
     private function valueFromMoney(Money $money):float
