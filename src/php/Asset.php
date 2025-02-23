@@ -30,7 +30,7 @@ final class Asset{
     
     private $currencies=[];
 
-    private $asset=array();
+    private $asset=[];
     
     function __construct(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=NULL)
     {

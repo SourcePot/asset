@@ -16,11 +16,27 @@ final class Rates{
 
     private const ECB_RATES_URL='https://data-api.ecb.europa.eu/service/data/EXR/D..EUR.SP00.A?format=csvdata&startPeriod={START}&endPeriod={END}';
     private const ECB_TIMEZONE='CET';
+    
+    private $oc=[];
+
     private $currencies=['EUR'=>'Euro'];
 
     function __construct()
     {
         $this->getRates(new \DateTime('2020-01-15'));
+    }
+
+    /**
+     * This method loads the Datapool object collection and provides access to all intantiated Datapool classes, e.g. Persistency 
+     *
+     * @param array $oc Object collection provided when Datapool web-instance is called
+     *
+     * @return array The object collection
+     *
+     */
+    final public function loadOc($oc):array
+    {
+        return $this->oc=$oc;
     }
 
     final public function getCurrencies():array{
@@ -40,6 +56,27 @@ final class Rates{
         } else if ($dateTime->format('Y-m-d H:i:s')<$dateTimeEarliestStr){
             throw new \Exception('E002: Requested rate is pre-EUR and not available. Rates available from '.$dateTimeEarliestStr.' CET.');
         }
+        if (isset($this->oc['SourcePot\Datapool\Foundation\Persistency'])){
+            // rate cache connected
+            $rates=$this->oc['SourcePot\Datapool\Foundation\Persistency']->get($dateTimeCmpStr);
+            if (empty($rates)){
+                // add rates to cache
+                $rates=$this->getRatesFromECB($dateTime,TRUE);
+                $this->oc['SourcePot\Datapool\Foundation\Persistency']->set($dateTimeCmpStr,$rates);
+                return $rates;
+            } else {
+                // rates recovered from cache
+                return $rates;
+            }
+        } else {
+            // no rate cache connected
+            return $this->getRatesFromECB($dateTime,FALSE);
+        }
+    }
+
+    final public function getRatesFromECB(\DateTime $dateTime,bool $dontUseLocalCache=FALSE):array
+    {
+        $rates=['DateTime'=>$dateTime,'EUR'=>1];
         $dir=str_replace('\src\php','\src\data',__DIR__);
         if (!is_dir($dir)){mkdir($dir);}
         $ratesFileName=$dir.'/'.$dateTime->format('Y-m-d').'_rates.csv';
@@ -51,12 +88,18 @@ final class Rates{
             if ($csv===FALSE){
                 throw new \Exception('E005: Failed to receive data from "'.$url.'"');
             } else if (empty($csv)){
-                throw new \Exception('E003: No rates available for this date.');
+                throw new \Exception('E003: No rates available for this date "'.$dateTime->format('Y-m-d').'".');
+            } else if ($dontUseLocalCache){
+                // don't cache as csv-file
             } else {
                 file_put_contents($ratesFileName,$csv);
             }
         }
-        $ratesRaw=$this->csvFile2arr($ratesFileName);
+        if ($dontUseLocalCache){
+            $ratesRaw=$this->csvFile2arr($url);
+        } else {
+            $ratesRaw=$this->csvFile2arr($ratesFileName);
+        }
         foreach($ratesRaw as $rate){
             $this->currencies[$rate['UNIT']]=str_replace('Euro/','',$rate['TITLE']);
             if (strlen($rate['OBS_VALUE'])===0){
