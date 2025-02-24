@@ -76,14 +76,16 @@ final class Rates{
 
     final public function getRatesFromECB(\DateTime $dateTime,bool $dontUseLocalCache=FALSE):array
     {
+        // get url
+        $url=self::ECB_RATES_URL;
+        $url=str_replace('{START}',$dateTime->format('Y-m-d'),$url);
+        $url=str_replace('{END}',$dateTime->format('Y-m-d'),$url);
+        // get rates
         $rates=['DateTime'=>$dateTime,'EUR'=>1];
         $dir=str_replace('\src\php','\src\data',__DIR__);
         if (!is_dir($dir)){mkdir($dir);}
         $ratesFileName=$dir.'/'.$dateTime->format('Y-m-d').'_rates.csv';
         if (!is_file($ratesFileName)){
-            $url=self::ECB_RATES_URL;
-            $url=str_replace('{START}',$dateTime->format('Y-m-d'),$url);
-            $url=str_replace('{END}',$dateTime->format('Y-m-d'),$url);
             $csv=@file_get_contents($url);
             if ($csv===FALSE){
                 throw new \Exception('E005: Failed to receive data from "'.$url.'"');

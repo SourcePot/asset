@@ -123,18 +123,21 @@ final class DateTimeParser{
             $string=$dateTimeArr['date'].' '.$dateTimeArr['time'];
             $this->dateTime=new \DateTime($string,$timeZone);
         } else {
-            // detect valid dateTime string
-            try {
-                $this->dateTime=new \DateTime($string,$timeZone);
-            } catch (\Exception $e){
-                $dateTimeArr=$this->str2dateTimeArr($string);
-                $string=$dateTimeArr['date'].' '.$dateTimeArr['time'];
-                if (empty($dateTimeArr['timezone'])){
+            // try to parse date time
+            $dateTimeArr=$this->str2dateTimeArr($string);
+            $dateTimeStr=$dateTimeArr['date'].' '.$dateTimeArr['time'];
+            if (empty($dateTimeArr['timezone'])){
+                $this->dateTime=new \DateTime($dateTimeStr,$timeZone);
+            } else {
+                $parsedTimeZone=new \DateTimeZone($dateTimeArr['timezone']);
+                $this->dateTime=new \DateTime($dateTimeStr,$parsedTimeZone);
+                $this->dateTime->setTimezone($timeZone);
+            }
+            if (!$this->isValid()){
+                try {
                     $this->dateTime=new \DateTime($string,$timeZone);
-                } else {
-                    $parsedTimeeZone=new \DateTimeZone($dateTimeArr['timezone']);
-                    $this->dateTime=new \DateTime($string,$parsedTimeeZone);
-                    $this->dateTime->setTimezone($timeZone);
+                } catch (\Exception $e){
+                    // nothing to do
                 }
             }
         }
@@ -275,7 +278,7 @@ final class DateTimeParser{
     {
         $minute=intval($minute);
         if ($minute>59 || $minute<0){
-            throw new \Exception('E101: Parsed minute out of range.');
+            throw new \Exception('E102: Parsed minute out of range.');
         }
         if ($minute<10){
             return '0'.strval($minute);
@@ -288,7 +291,7 @@ final class DateTimeParser{
     {
         $second=intval($second);
         if ($second>59 || $second<0){
-            throw new \Exception('E101: Parsed second out of range.');
+            throw new \Exception('E103: Parsed second out of range.');
         }
         if ($second<10){
             return '0'.strval($second);
@@ -309,7 +312,7 @@ final class DateTimeParser{
             $tmpString=str_replace($needle,$month,$tmpString);
             break;
         }
-        // detect format August 13., 2021
+        // detect format august 13., 2021
         preg_match('/[^a-z]([a-z]{3,20})([^,]{2,5})[,]\s{0,2}([0-9]{2,4})[^0-9]/',$tmpString,$match);
         if (isset($match[0])){
             $date=$this->createDateStr($match[2],$match[1],$match[3]);
@@ -317,7 +320,7 @@ final class DateTimeParser{
                 return str_replace($match[0],'{'.$date.'}',$tmpString);
             }
         }
-        // detect format 13. August 2021
+        // detect format 13. august 2021
         preg_match('/[^0-9]([0-3]{0,1}[0-9])[. ]{1,3}([a-z]{3,20})[. ]{1,3}([0-9]{2,4})[^0-9]/',$tmpString,$match);
         if (isset($match[0])){
             $date=$this->createDateStr($match[1],$match[2],$match[3]);
@@ -404,7 +407,7 @@ final class DateTimeParser{
     {
         $day=intval($day);
         if ($day>31 || $day<1){
-            throw new \Exception('E101: Parsed day out of range.');
+            throw new \Exception('E105: Parsed day out of range.');
         }
         if ($day<10){
             return '0'.strval($day);
@@ -419,12 +422,12 @@ final class DateTimeParser{
             if (isset(self::MONTH2NUMERIC[$month])){
                 return self::MONTH2NUMERIC[$month];
             } else {
-                throw new \Exception('E102: Parsed month out of range.');
+                throw new \Exception('E106: Parsed month out of range.');
             }
         }
         $month=intval($month);
         if ($month>12 || $month<1){
-            throw new \Exception('E103: Parsed month out of range.');
+            throw new \Exception('E107: Parsed month out of range.');
         }
         if ($month<10){
             return '0'.strval($month);
