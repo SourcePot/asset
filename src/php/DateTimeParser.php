@@ -238,9 +238,17 @@ final class DateTimeParser{
             }
         }
         // detect 22.34hrs
-        preg_match('/[^0-9]([0-2]{0,1}[0-9])[:.]([0-5]{0,1}[0-9])([hrs]{0,3})[^0-9hrs:]/',$tmpString,$match);
+        preg_match('/[^0-9]([0-2]{0,1}[0-9])[:.]([0-5]{0,1}[0-9])([hrsUhr ]{3,4})[^0-9hrs:]/',$tmpString,$match);
         if (isset($match[0])){
             $time=$this->createTimeStr('00',$match[2],$match[1]);
+            if ($time){
+                return str_replace($match[0],'{'.$time.'}',$tmpString);
+            }
+        }
+        // detect 22:34:12
+        preg_match('/[^0-9]([0-2]{0,1}[0-9])[:]([0-5]{0,1}[0-9])[:]([0-5]{0,1}[0-9])[^0-9]/',$tmpString,$match);
+        if (isset($match[0])){
+            $time=$this->createTimeStr($match[3],$match[2],$match[1]);
             if ($time){
                 return str_replace($match[0],'{'.$time.'}',$tmpString);
             }
@@ -333,7 +341,7 @@ final class DateTimeParser{
 
     private function normalizeDEdateString(string $string):string
     {
-        // detect DE format 31.08.2011
+        // detect DE format 31.08.2011 oder 31.08.11
         $tmpString=' '.$string.' ';
         preg_match('/[^0-9]([0-3]{0,1}[0-9])[.]([0-1]{0,1}[0-9])[.]([0-9]{2,4})[^0-9]/',$tmpString,$match);
         if (isset($match[0])){
