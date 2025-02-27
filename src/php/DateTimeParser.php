@@ -31,7 +31,10 @@ final class DateTimeParser{
     
     private const MONTHS_DICT_DE=['01'=>'Januar','02'=>'Februar','03'=>'März','04'=>'April','05'=>'Mai','06'=>'Juni','07'=>'Juli','08'=>'August','09'=>'September','10'=>'Oktober','11'=>'November','12'=>'Dezember'];
     private const MONTHS_DICT_ES=['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril','05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto','09'=>'septiembr','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
-    private const MONTHS_DICT_FR=['01'=>'janvier','02'=>'février','03'=>'mars','04'=>'avril','05'=>'mai','06'=>'juin','07'=>'juillet','08'=>'aout','09'=>'septembre','10'=>'octobre','11'=>'novembre','12'=>'décembre'];
+    private const MONTHS_DICT_FR=['01'=>'janvier','02'=>'février','03'=>'mars','04'=>'avril','05'=>'mai','06'=>'juin','07'=>'juillet','08'=>'août','09'=>'septembre','10'=>'octobre','11'=>'novembre','12'=>'décembre'];
+    
+    private $initDateTime=['date'=>'0000-01-01','time'=>'12:00:00'];
+
     private const YEAR_2000_THRESHOLD=50;
 
     private $dateTime=NULL;
@@ -84,6 +87,8 @@ final class DateTimeParser{
         $dateTimeArr['US long']=$this->dateTime->format('F').' '.$this->dateTime->format('j').', '.$this->dateTime->format('Y');
         $dateTimeArr['UK long']=$this->dateTime->format('j').' '.$this->dateTime->format('F').' '.$this->dateTime->format('Y');
         $dateTimeArr['DE long']=$this->dateTime->format('j').'. '.self::MONTHS_DICT_DE[$this->dateTime->format('m')].' '.$this->dateTime->format('Y');
+        $dateTimeArr['FR long']='le '.$this->dateTime->format('j').' '.self::MONTHS_DICT_FR[$this->dateTime->format('m')].' '.$this->dateTime->format('Y');
+        $dateTimeArr['ES long']=$this->dateTime->format('j').' de '.self::MONTHS_DICT_ES[$this->dateTime->format('m')].' de '.$this->dateTime->format('Y');
         $dateTimeArr['isValid']=$this->isValid();
         return $dateTimeArr;
     }
@@ -103,16 +108,31 @@ final class DateTimeParser{
         }
     }
     
+    final public function setInitDateTime(string $dateTime)
+    {
+        preg_match('/([0-9]{4}-[0-1][0-9]-[0-3][0-9]) ([0-2][0-9]:[0-5][0-9]:[0-5][0-9])/',$dateTime,$match);
+        if (isset($match[0])){
+            $this->initDateTime=['date'=>$match[1],'time'=>$match[2]];
+        } else {
+            throw new \Exception('E104: Invalkid initDateTime "'.$dateTime.'". Required format is "Y-m-d H:i:s"');
+        }
+    }
+
     final public function setFromTimestamp($timestamp)
     {
         $timestamp=intval($timestamp);
-        $this->dateTime=new \DateTime('@'.$timestamp);
+        if ($timestamp===0){
+            $dateTimetStr=implode(' ',$this->initDateTime);
+            $this->dateTime=new \DateTime($dateTimetStr);
+        } else {
+            $this->dateTime=new \DateTime('@'.$timestamp);
+        }
     }
 
     final public function setFromExcelTimestamp($excelTimestamp)
     {
-        $unixTimestamp=intval(86400*(floatval($excelTimestamp)-25569));
-        $this->dateTime=new \DateTime('@'.$unixTimestamp);
+        $timestamp=intval(86400*(floatval($excelTimestamp)-25569));
+        $this->setFromTimestamp($timestamp);
     }
 
     final public function setFromString(string $string,\DateTimeZone $timeZone=new \DateTimeZone(self::DEFAULT_TIMEZONE)):bool
@@ -158,7 +178,7 @@ final class DateTimeParser{
 
     private function numeric2dateTimeArr(string $string):array
     {
-        $dateTimeArr=['date'=>'0000-01-01','time'=>'12:00:00'];
+        $dateTimeArr=$this->initDateTime;
         // YYYMMDD
         preg_match('/([12][0-9]{3})([01][0-9])([0-3][0-9])/',$string,$match);
         if (isset($match[0])){
@@ -172,7 +192,7 @@ final class DateTimeParser{
 
     private function str2dateTimeArr(string $string):array
     {
-        $dateTimeArr=['date'=>'0000-01-01','time'=>'12:00:00'];
+        $dateTimeArr=$this->initDateTime;
         // parse timezone
         foreach(\DateTimeZone::listIdentifiers() as $timezoneStr){
             if (strpos($string,$timezoneStr)===FALSE){continue;}
