@@ -61,7 +61,8 @@ final class DateTimeParser{
 
     final public function isValid():bool
     {
-        return !($this->dateTime->format('d')==='01' && $this->dateTime->format('m')==='01' && $this->dateTime->format('Y')==='0000');
+        $initDateTimeStr=implode(' ',$this->initDateTime);
+        return !($this->dateTime->format('Y-m-d H:i:s')===$initDateTimeStr);
     }
 
     final public function getDateTime():\DateTime
@@ -120,19 +121,25 @@ final class DateTimeParser{
 
     final public function setFromTimestamp($timestamp)
     {
-        $timestamp=intval($timestamp);
-        if ($timestamp===0){
+        if (empty($timestamp)){
             $dateTimetStr=implode(' ',$this->initDateTime);
             $this->dateTime=new \DateTime($dateTimetStr);
         } else {
+            $timestamp=intval($timestamp);
             $this->dateTime=new \DateTime('@'.$timestamp);
         }
     }
 
     final public function setFromExcelTimestamp($excelTimestamp)
     {
-        $timestamp=intval(86400*(floatval($excelTimestamp)-25569));
-        $this->setFromTimestamp($timestamp);
+        if (empty($excelTimestamp)){
+            $dateTimetStr=implode(' ',$this->initDateTime);
+            $this->dateTime=new \DateTime($dateTimetStr);
+        } else {
+            $timestamp=intval(86400*(floatval($excelTimestamp)-25569));
+            var_dump($timestamp);
+            $this->dateTime=new \DateTime('@'.$timestamp);
+        }
     }
 
     final public function setFromString(string $string,\DateTimeZone $timeZone=new \DateTimeZone(self::DEFAULT_TIMEZONE)):bool

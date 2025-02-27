@@ -88,4 +88,40 @@ final class DateTimeParserTest extends TestCase
         $this->assertSame(FALSE, $dateTimeParserObj->isValid());
     }
 
+    public function testDateTimeParserTimestamp(): void
+    {
+        $testArr=[0=>'1900-01-01 12:00:00',
+                  ''=>'1900-01-01 12:00:00',
+                  '0'=>'1900-01-01 12:00:00',
+                  1740685504=>'2025-02-27 19:45:04',
+                ];
+        
+        $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
+        $dateTimeParserObj->setInitDateTime('1900-01-01 12:00:00');
+
+        foreach($testArr as $timestamp=>$shouldBe){
+            $dateTimeParserObj->setFromTimestamp($timestamp);
+            $resultArr=$dateTimeParserObj->getArray();
+            $this->assertSame($shouldBe, $resultArr['System']);
+        }
+    }
+
+    public function testDateTimeParserExcelTimestamp(): void
+    {
+        $testArr=[0=>'1900-01-01 12:00:00',
+                  ''=>'1900-01-01 12:00:00',
+                  '0'=>'1900-01-01 12:00:00',
+                  '45715.822962962962962'=>'2025-02-27 19:45:04',
+                ];
+        
+        $dateTimeParserObj=new \SourcePot\Asset\DateTimeParser();
+        $dateTimeParserObj->setInitDateTime('1900-01-01 12:00:00');
+
+        foreach($testArr as $timestamp=>$shouldBe){
+            $dateTimeParserObj->setFromExcelTimestamp($timestamp);
+            $resultArr=$dateTimeParserObj->getArray();
+            $this->assertSame($shouldBe, $resultArr['System']);
+        }
+    }
+
 }
