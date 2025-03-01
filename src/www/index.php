@@ -26,7 +26,7 @@ $html='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head
 $html.='<body><form name="892d183ba51083fc2a0b3d4d6453e20b" id="892d183ba51083fc2a0b3d4d6453e20b" method="post" enctype="multipart/form-data">';
 $html.='<h1>Evaluation Page for the Asset-Package</h1>';
 $html.='<div class="control"><h2>Asset properties for instantiation</h2>';
-$html.='<input type="text" pattern="[0-9.]*" value="'.$value.'" name="value" id="value" style="margin:0.25em;"/>';
+$html.='<input type="text" pattern="[0-9.+\-e]*" value="'.$value.'" name="value" id="value" style="margin:0.25em;"/>';
 $html.='<select name="unit" id="unit">';
 foreach($rates as $id=>$name){
     $selected=($id===$unit)?' selected':'';
@@ -57,7 +57,6 @@ foreach($dateTimeObj->getArray() as $key=>$value){
     $html.='<tr><td>'.$key.'</td><td>'.$value.'</td></tr>';
 }
 $html.='</table>';
-
 
 // print asset
 $html.='<table>';

@@ -138,7 +138,7 @@ final class Asset{
         $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime??(new \DateTime('now'))];
         $asset['Currency']=$this->currencies[$asset['unit']];
         // recover value
-        preg_match('/[+\-]{0,1}[0-9,.]+[eE+\-]{0,2}[0-9]+/',$string,$match);
+        preg_match('/[+\-.]{0,2}([0-9]+[., ]{0,1})+([eE+\-]{0,2}[0-9]+){0,1}/',$string,$match);
         if (isset($match[0])){
             $numberStr=$match[0];
             $chrArr=count_chars($numberStr,1);
