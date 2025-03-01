@@ -137,7 +137,6 @@ final class DateTimeParser{
             $this->dateTime=new \DateTime($dateTimetStr);
         } else {
             $timestamp=intval(86400*(floatval($excelTimestamp)-25569));
-            var_dump($timestamp);
             $this->dateTime=new \DateTime('@'.$timestamp);
         }
     }
