@@ -44,7 +44,9 @@ $dateTimeObj = new DateTimeParser();
 $dateTimeObj->setFromString($dateTime);
 
 require_once('../php/Asset.php');
-$asset=new Asset(floatval($value),$unit,$dateTimeObj->getDateTime());
+$asset=new Asset();
+$assetArr=$asset->guessAssetFromString($value,$unit,$dateTimeObj->getDateTime());
+$asset->set($assetArr['value'],$assetArr['unit'],$assetArr['dateTime']);
 
 // print dateTime
 $html.='<table>';

@@ -31,7 +31,7 @@ final class Asset{
 
     private $asset=[];
     
-    function __construct(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=new \DateTime('now'))
+    function __construct(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL)
     {
         $this->set($value,$unit,$dateTime);
         // add currencies
@@ -53,17 +53,17 @@ final class Asset{
      * Setter methods
      */
 
-    public function set(float|string $value=0,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=new \DateTime('now'))
+    public function set(float|string $value=0,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL)
     {
         $unit=$this->normalizeUnit($unit);
-        $this->asset=['value'=>floatval($value),'unit'=>$unit,'Currency'=>$this->currencies[$unit]??self::DEFAULT_UNIT,'dateTime'=>$dateTime];
+        $this->asset=['value'=>floatval($value),'unit'=>$unit,'Currency'=>$this->currencies[$unit]??self::DEFAULT_UNIT,'dateTime'=>$dateTime??new \DateTime('now')];
         // create Money PHP object
         $currencies = new ISOCurrencies();
         $moneyParser = new DecimalMoneyParser($currencies);
-        $this->asset['money'] = $moneyParser->parse(strval($value),new \Money\Currency($unit));
+        $this->asset['money']=$moneyParser->parse(strval($value),new \Money\Currency($unit));
     }
 
-    public function setFromString(string $string,string|NULL $unit=NULL,\DateTime $dateTime=NULL)
+    public function setFromString(string $string,string|NULL $unit=NULL,\DateTime|NULL $dateTime=NULL)
     {
         $asset=$this->guessAssetFromString($string,$unit,$dateTime);
         $this->set($asset['value'],$asset['unit'],$asset['dateTime']);
@@ -102,11 +102,13 @@ final class Asset{
         return self::UNIT_ALIAS[$unit]??$unit;
     }
 
-    final public function guessAssetFromString(string $string,string|NULL $unit=NULL):array
+    final public function guessAssetFromString(string $string,string|NULL $unit=NULL,\DateTime|NULL $dateTime=NULL):array
     {
         $dateTimeParserObj=new DateTimeParser();
         $dateTimeParserObj->setFromString($string);
-        if ($dateTimeParserObj->isValid()){
+        if (isset($dateTime)){
+            // nothing to do
+        } else if ($dateTimeParserObj->isValid()){
             $dateTime=$dateTimeParserObj->get();
         } else {
             $dateTime=new \DateTime('now');
@@ -114,7 +116,7 @@ final class Asset{
         // detect unit | currency
         if ($unit){
             $unit=$this->normalizeUnit($unit);
-            $unit=$this->currencies[$unit]??NULL;
+            $unit=(isset($this->currencies[$unit]))?$unit:NULL;
         }
         $string=strtoupper($string);
         if ($unit===NULL){
@@ -134,8 +136,8 @@ final class Asset{
             }
         }
         // set template
-        $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime??(new \DateTime('now'))];
-        $asset['Currency']=$this->currencies[$asset['unit']];
+        $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime];
+        $asset['Currency']=(isset($this->currencies[$asset['unit']]))?$this->currencies[$asset['unit']]:$asset['unit'];
         // recover value
         preg_match(self::NUMBER_REGEX,$string,$match);
         if (isset($match[0])){
@@ -231,24 +233,24 @@ final class Asset{
         return $this->__toString();
     }
     
-    final public function addAssetString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=new \DateTime('now')):string
+    final public function addAssetString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL):string
     {
         $this->assetStringOperation('add',$string,$unit,$dateTime);
         return $this->__toString();
     }
     
-    final public function subAssetString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=new \DateTime('now')):string
+    final public function subAssetString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL):string
     {
         $this->assetStringOperation('sub',$string,$unit,$dateTime);
         return $this->__toString();
     }
     
-    final public function getRatioOfAssetString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime $dateTime=new \DateTime('now')):string
+    final public function getRatioOfAssetString(string $string,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL):string
     {
         return $this->assetStringOperation('ratioOf',$string,$unit,$dateTime);
     }
     
-    private function assetStringOperation(string $operation,string $string,string|NULL $unit=NULL,\DateTime $dateTime=new \DateTime('now')):string
+    private function assetStringOperation(string $operation,string $string,string|NULL $unit=NULL,\DateTime|NULL $dateTime=NULL):string
     {
         // get to add asset from string
         $toAddAsset=$this->guessAssetFromString($string,$unit,$dateTime);
