@@ -39,10 +39,9 @@ final class DateTimeParser{
 
     private $dateTime=NULL;
 
-    function __construct(\DateTime $dateTime=NULL)
+    function __construct()
     {
-        $now=new \DateTime('now');
-        $this->dateTime=$dateTime??$now;
+        $this->dateTime=new \DateTime('now');
     }
 
     /**
