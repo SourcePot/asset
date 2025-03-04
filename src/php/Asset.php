@@ -13,7 +13,10 @@ namespace SourcePot\Asset;
 use \Money\Money;
 use \Money\Currency;
 use \Money\Converter;
+use \Money\Currencies\AggregateCurrencies;
 use \Money\Currencies\ISOCurrencies;
+use \Money\Currencies\BitcoinCurrencies;
+use \Money\Currencies\CryptoCurrencies;
 use \Money\Formatter\DecimalMoneyFormatter;
 use \Money\Parser\DecimalMoneyParser;
 use \Money\Exchange\FixedExchange;
@@ -21,30 +24,29 @@ use \Money\Exchange\FixedExchange;
 final class Asset{
 
     private const DEFAULT_UNIT='EUR';
-    private const DEFAULT_DECIMALS=2;
     private const UNIT_ALIAS=['£'=>'GBP','€'=>'EUR','AU$'=>'AUD','$'=>'USD','US$'=>'USD'];
-    private const DECIMALS=['XPF'=>0,'XAF'=>0,'VUV'=>0,'UGX'=>0,'TND'=>3,'RWF'=>0,'OMR'=>3,'PYG'=>0,'LYD'=>3,'KRW'=>0,'KWD'=>3,'KMF'=>0,'JPY'=>0,'JOD'=>3,'IQD'=>3,'IDR'=>0,'GNF'=>0,'DJF'=>0,'CVE'=>0,'BHD'=>3];
     private const BCMATH_SCALE=6;
     public const NUMBER_REGEX='/([+\-]{0,1})(([., ]{0,1}[0-9]+)+)(([eE+\-]{0,2}[0-9.,]+){0,1})/';
     
-    private $currencies=[];
+    private $currencies;
 
     private $asset=[];
     
     function __construct(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL)
     {
-        $this->set($value,$unit,$dateTime);
         // add currencies
-        $rates=new Rates();
-        $this->currencies=$rates->getCurrencies();
-        $this->asset['Currency']=$this->currencies[$unit]??'';
-        //
+        $this->currencies = new AggregateCurrencies([
+            new BitcoinCurrencies(),
+            new CryptoCurrencies(), 
+            new ISOCurrencies(),
+        ]);
+        // initial asset
+        $this->set($value,$unit,$dateTime);
     }
 
     public function __toString()
     {
-        $currencies = new ISOCurrencies();
-        $moneyFormatter = new DecimalMoneyFormatter($currencies);
+        $moneyFormatter = new DecimalMoneyFormatter($this->currencies);
         $value=$moneyFormatter->format($this->asset['money']); // outputs 1.00
         return $value.' '.$this->asset['unit'].' ('.$this->asset['dateTime']->format('c').')';
     }
@@ -56,10 +58,9 @@ final class Asset{
     public function set(float|string $value=0,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL)
     {
         $unit=$this->normalizeUnit($unit);
-        $this->asset=['value'=>floatval($value),'unit'=>$unit,'Currency'=>$this->currencies[$unit]??self::DEFAULT_UNIT,'dateTime'=>$dateTime??new \DateTime('now')];
+        $this->asset=['value'=>floatval($value),'unit'=>$unit,'Currency'=>'??','dateTime'=>$dateTime??new \DateTime('now')];
         // create Money PHP object
-        $currencies = new ISOCurrencies();
-        $moneyParser = new DecimalMoneyParser($currencies);
+        $moneyParser = new DecimalMoneyParser($this->currencies);
         $this->asset['money']=$moneyParser->parse(strval($value),new \Money\Currency($unit));
     }
 
@@ -80,7 +81,7 @@ final class Asset{
      
     public function getArray():array
     {
-        $decimals=(isset(self::DECIMALS[$this->asset['unit']]))?self::DECIMALS[$this->asset['unit']]:self::DEFAULT_DECIMALS;
+        $decimals=$this->currencies->subunitFor(new Currency($this->asset['unit']));
         $assetArr=['ISO 8601'=>$this->asset['dateTime']->format('c'),'RFC 2822'=>$this->asset['dateTime']->format('r'),'Timestamp'=>$this->asset['dateTime']->getTimestamp(),'Currency'=>$this->asset['unit'],'Currency (long)'=>$this->asset['Currency'],'Amount'=>round($this->asset['value'],$decimals)];
         $assetArr['Amount de']=number_format($this->asset['value'],$decimals,',','');
         $assetArr['Amount (US)']=$assetArr['Currency'].' '.number_format($this->asset['value'],$decimals);
@@ -114,11 +115,6 @@ final class Asset{
             $dateTime=new \DateTime('now');
         }
         // detect unit | currency
-        if ($unit){
-            $unit=$this->normalizeUnit($unit);
-            $unit=(isset($this->currencies[$unit]))?$unit:NULL;
-        }
-        $string=strtoupper($string);
         if ($unit===NULL){
             foreach(self::UNIT_ALIAS as $needle=>$code){
                 if (strpos($string,$needle)!==FALSE){
@@ -127,17 +123,18 @@ final class Asset{
                 }
             }
         }
+        $unit=$this->normalizeUnit($unit);
         if ($unit===NULL){
-            foreach($this->currencies as $needle=>$name){
-                if (strpos($string,$needle)!==FALSE){
-                    $unit=$needle;
+            foreach($this->currencies as $currency){
+                if (strpos($string,$currency->getCode())!==FALSE){
+                    $unit=$currency->getCode();
                     break;
                 }
             }
         }
         // set template
         $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime];
-        $asset['Currency']=(isset($this->currencies[$asset['unit']]))?$this->currencies[$asset['unit']]:$asset['unit'];
+        $asset['Currency']='??';
         // recover value
         preg_match(self::NUMBER_REGEX,$string,$match);
         if (isset($match[0])){
@@ -176,8 +173,7 @@ final class Asset{
 
     private function valueFromMoney(Money $money):float
     {
-        $currencies = new ISOCurrencies();
-        $moneyFormatter = new DecimalMoneyFormatter($currencies);
+        $moneyFormatter = new DecimalMoneyFormatter($this->currencies);
         return floatval($moneyFormatter->format($money));
     }
 
@@ -200,12 +196,12 @@ final class Asset{
             // calculate money conversion
             $exchageRateArr=$this->getExchangeRateArr($this->asset['unit'],$unit,$conversionDateTime);
             $exchange = new FixedExchange($exchageRateArr);
-            $converter = new Converter(new ISOCurrencies(), $exchange);
+            $converter = new Converter($this->currencies, $exchange);
             $this->asset['money'] = $converter->convert($this->asset['money'], new Currency($unit));
             // update asset value, unit and dateTime
             $this->asset['value']=$this->valueFromMoney($this->asset['money']);
             $this->asset['unit']=$unit;
-            $this->asset['Currency']=$this->currencies[$unit]??'';
+            $this->asset['Currency']='??';
             $this->asset['string']='';
             // errors and warnings
             if (isset($sourceRate['Error'])){$errors[]=$sourceRate['Error'];}
@@ -255,13 +251,12 @@ final class Asset{
         // get to add asset from string
         $toAddAsset=$this->guessAssetFromString($string,$unit,$dateTime);
         $unit=(empty($toAddAsset['unit']))?$unit:$toAddAsset['unit'];
-        $currencies = new ISOCurrencies();
-        $moneyParser = new DecimalMoneyParser($currencies);
+        $moneyParser = new DecimalMoneyParser($this->currencies);
         $toAddAsset['money'] = $moneyParser->parse($toAddAsset['value string'],new \Money\Currency($unit));
         // convert toAddAsset to target unit
         $exchageRateArr=$this->getExchangeRateArr($unit,$this->asset['unit'],$dateTime);
         $exchange = new FixedExchange($exchageRateArr);
-        $converter = new Converter(new ISOCurrencies(), $exchange);
+        $converter = new Converter($this->currencies, $exchange);
         $money = $converter->convert($toAddAsset['money'], new Currency($this->asset['unit']));
         // add to asset
         if ($operation==='add'){
