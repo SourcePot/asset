@@ -123,7 +123,6 @@ final class Asset{
                 }
             }
         }
-        $unit=$this->normalizeUnit($unit);
         if ($unit===NULL){
             foreach($this->currencies as $currency){
                 if (strpos($string,$currency->getCode())!==FALSE){
@@ -131,6 +130,8 @@ final class Asset{
                     break;
                 }
             }
+        } else {
+            $unit=$this->normalizeUnit($unit);
         }
         // set template
         $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime];
