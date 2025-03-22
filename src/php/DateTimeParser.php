@@ -206,8 +206,8 @@ final class DateTimeParser{
             break;
         }
         // parse time
-        $string=$this->normalizeSystemTimeString($string);
         $string=$this->normalizeUKtimeString($string);
+        $string=$this->normalizeSystemTimeString($string);
         preg_match('/\{([0-9]{2}:[0-9]{2}:[0-9]{2})\}/',$string,$match);
         if (isset($match[1])){
             // valid time detected
@@ -229,8 +229,8 @@ final class DateTimeParser{
         return $dateTimeArr;
     }
     
-    /*  Time string methods - detection of different time formats, verification of ranges and formating
-    *
+    /*
+    *   Time string methods - detection of different time formats, verification of ranges and formating
     */
     
     private function normalizeSystemTimeString(string $string):string
@@ -240,6 +240,12 @@ final class DateTimeParser{
         preg_match('/[^0-9]([0-2][0-9][:][0-5][0-9][:][0-5][0-9])[^0-9]/',$tmpString,$match);
         if (isset($match[0])){
             return str_replace($match[0],'{'.$match[1].'}',$tmpString);
+        } else {
+            // detect 12:34
+            preg_match('/[^0-9]([0-2][0-9][:][0-5][0-9])[^0-9]/',$tmpString,$match);
+            if (isset($match[0])){
+                return str_replace($match[0],'{'.$match[1].':00}',$tmpString);
+            }        
         }
         return $string;
     }
@@ -247,36 +253,29 @@ final class DateTimeParser{
     private function normalizeUKtimeString(string $string):string
     {
         $tmpString=' '.strtolower($string).' ';
-        // detect 12:34pm
-        preg_match('/[^0-9]([0-1]{0,1}[0-9])[:.]([0-5]{0,1}[0-9])([apm]{2})[^apm]/',$tmpString,$match);
-        if (isset($match[0])){
-            if ($match[3]=='am'){
-                $hour=intval($match[1]);
-                $hour=($hour===12)?0:$hour;
-            } else {
-                $hour=intval($match[1]);
-                $hour=($hour===12)?12:(12+$hour);
-            }
-            $time=$this->createTimeStr('00',$match[2],strval($hour));
-            if ($time){
-                return str_replace($match[0],'{'.$time.'}',$tmpString);
-            }
+        // get type identifier
+        preg_match('/[0-9 ]((am)|(pm)|(hrs)|(uhr))[^a-z]/',$tmpString,$match);
+        if (!isset($match[1])){return $string;}
+        $timeType=$match[1];
+        // ectract huors, minutes, seconds 3:45am | 3:45pm | 15.45hrs
+        preg_match('/[^0-9]([0-2]{0,1}[0-9])([:.][0-5]{0,1}[0-9]){0,1}([:.][0-5]{0,1}[0-9]){0,1}('.$timeType.')/',$tmpString,$match);
+        if (empty($match[0])){return $string;}
+        $keys=['string','h','m','s','type'];
+        $timeComps=[];
+        foreach($match as $index=>$value){
+            if ($index===0 || $index===4){continue;}
+            $value=preg_replace('/[^0-9]/','',$value);
+            $timeComps[$keys[$index]]=intval($value);
         }
-        // detect 22.34hrs
-        preg_match('/[^0-9]([0-2]{0,1}[0-9])[:.]([0-5]{0,1}[0-9])([hrsUhr ]{3,4})[^0-9hrs:]/',$tmpString,$match);
-        if (isset($match[0])){
-            $time=$this->createTimeStr('00',$match[2],$match[1]);
-            if ($time){
-                return str_replace($match[0],'{'.$time.'}',$tmpString);
-            }
+        // adjust hour dependend on am | pm
+        if ($timeType=='am'){
+            $timeComps['h']=($timeComps['h']===12)?0:$timeComps['h'];
+        } else if ($timeType=='pm'){
+            $timeComps['h']=($timeComps['h']===12)?12:(12+$timeComps['h']);
         }
-        // detect 22:34:12
-        preg_match('/[^0-9]([0-2]{0,1}[0-9])[:]([0-5]{0,1}[0-9])[:]([0-5]{0,1}[0-9])[^0-9]/',$tmpString,$match);
-        if (isset($match[0])){
-            $time=$this->createTimeStr($match[3],$match[2],$match[1]);
-            if ($time){
-                return str_replace($match[0],'{'.$time.'}',$tmpString);
-            }
+        $time=$this->createTimeStr(strval($timeComps['s']),strval($timeComps['m']),strval($timeComps['h']));
+        if ($time){
+            return str_replace($match[0],'{'.$time.'}',$tmpString);
         }
         return $string;
     }
