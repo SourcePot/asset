@@ -13,19 +13,20 @@ namespace SourcePot\Asset;
 final class DateTimeParser{
 
     private const DEFAULT_TIMEZONE='Europe/Berlin';
-    private const MONTHS_NEEDLES=['january'=>'january','januar'=>'january','enero'=>'january','janvier'=>'january','jan.'=>'january','jan'=>'january',
-                                  'february'=>'february','februar'=>'february','febrero'=>'february','février'=>'february','feb.'=>'february','feb'=>'february',
-                                  'march'=>'march','märz'=>'march','marzo'=>'march','mars'=>'march','mar.'=>'march','mar'=>'march',
-                                  'april'=>'april','abril'=>'april','avril'=>'april','apr.'=>'april','apr'=>'april',
-                                  'may'=>'may','mai'=>'may','mayo'=>'may','mai'=>'may',
-                                  'june'=>'june','juni'=>'june','junio'=>'june','juin'=>'june','jun.'=>'june','jun'=>'june',
-                                  'july'=>'july','juli'=>'july','julio'=>'july','juillet'=>'july','jul.'=>'july','jul'=>'july',
-                                  'august'=>'august','agosto'=>'august','aout'=>'august','aug.'=>'august','aug'=>'august',
-                                  'september'=>'september','september'=>'september','septiembre'=>'september','septembre'=>'september','sep.'=>'september','sep'=>'september',
-                                  'october'=>'october','oktober'=>'october','octubre'=>'october','octobre'=>'october','oct.'=>'october','oct'=>'october',
-                                  'november'=>'november','noviembre'=>'november','novembre'=>'november','nov.'=>'november','nov'=>'november',
-                                  'december'=>'december','dezember'=>'december','diciembre'=>'december','décembre'=>'december','dec.'=>'december','dec'=>'december','dic.'=>'december','dic'=>'december',
-                                ];
+    private const MONTHS_NEEDLES=[
+        'january'=>'january','januar'=>'january','enero'=>'january','janvier'=>'january','jan.'=>'january','jan'=>'january',
+        'february'=>'february','februar'=>'february','febrero'=>'february','février'=>'february','feb.'=>'february','feb'=>'february',
+        'march'=>'march','märz'=>'march','marzo'=>'march','mars'=>'march','mar.'=>'march','mar'=>'march',
+        'april'=>'april','abril'=>'april','avril'=>'april','apr.'=>'april','apr'=>'april',
+        'may'=>'may','mai'=>'may','mayo'=>'may','mai'=>'may',
+        'june'=>'june','juni'=>'june','junio'=>'june','juin'=>'june','jun.'=>'june','jun'=>'june',
+        'july'=>'july','juli'=>'july','julio'=>'july','juillet'=>'july','jul.'=>'july','jul'=>'july',
+        'august'=>'august','agosto'=>'august','aout'=>'august','aug.'=>'august','aug'=>'august',
+        'september'=>'september','september'=>'september','septiembre'=>'september','septembre'=>'september','sep.'=>'september','sep'=>'september',
+        'october'=>'october','oktober'=>'october','octubre'=>'october','octobre'=>'october','oct.'=>'october','oct'=>'october',
+        'november'=>'november','noviembre'=>'november','novembre'=>'november','nov.'=>'november','nov'=>'november',
+        'december'=>'december','dezember'=>'december','diciembre'=>'december','décembre'=>'december','dec.'=>'december','dec'=>'december','dic.'=>'december','dic'=>'december',
+    ];
     
     private const MONTH2NUMERIC=['january'=>'01','february'=>'02','march'=>'03','april'=>'04','may'=>'05','june'=>'06','july'=>'07','august'=>'08','september'=>'09','october'=>'10','november'=>'11','december'=>'12'];
     
