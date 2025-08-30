@@ -118,6 +118,9 @@ final class Rates{
         $resultArr=[];
         $columns=[];
         $file=fopen($fileName,"r");
+        if ($file===FALSE){
+            return ['Error'=>'E004: Failed to open file'.$fileName];
+        }
         while (($data=fgetcsv($file))!==FALSE)
         {
             if (empty($columns)){
