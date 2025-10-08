@@ -13,6 +13,9 @@ namespace SourcePot\Asset;
 final class DateTimeParser{
 
     private const DEFAULT_TIMEZONE='Europe/Berlin';
+
+    private const DATE_FORMAT_IF_IN_DOUBT_UK=TRUE;
+
     private const MONTHS_NEEDLES=[
         'january'=>'january','januar'=>'january','enero'=>'january','janvier'=>'january','jan.'=>'january','jan'=>'january',
         'february'=>'february','februar'=>'february','febrero'=>'february','février'=>'february','feb.'=>'february','feb'=>'february',
@@ -182,20 +185,6 @@ final class DateTimeParser{
      * Date-time parser methods
      */
 
-    private function numeric2dateTimeArr(string $string):array
-    {
-        $dateTimeArr=$this->initDateTime;
-        // YYYMMDD
-        preg_match('/([12][0-9]{3})([01][0-9])([0-3][0-9])/',$string,$match);
-        if (isset($match[0])){
-            $date=$this->createDateStr($match[3],$match[2],$match[1]);
-            if ($date){
-                $dateTimeArr['date']=$date;
-            }
-        }
-        return $dateTimeArr;
-    }
-
     private function str2dateTimeArr(string $string):array
     {
         $dateTimeArr=$this->initDateTime;
@@ -216,20 +205,18 @@ final class DateTimeParser{
             $dateTimeArr['time']=$match[1];
         }
         // parse date
-        $string=$this->normalizeDEdateString($string);
-        $string=$this->normalizeUSdateString($string);
-        $string=$this->normalizeUKdateString($string);
-        $string=$this->normalizeSystemdateString($string);
-        $string=$this->normalizeTextDateString($string);
+        $string=$this->normalizeDateString($string);
         preg_match('/\{([0-9]{4}-[0-9]{2}-[0-9]{2})\}/',$string,$match);
         if (isset($match[1])){
             // valid date detected
             $string=str_replace($match[0],'',$string);
             $dateTimeArr['date']=$match[1];
+        } else {
+            throw new \Exception('E100: Parsed hour out of range.');
         }
         return $dateTimeArr;
     }
-    
+
     /*
     *   Time string methods - detection of different time formats, verification of ranges and formating
     */
@@ -336,153 +323,73 @@ final class DateTimeParser{
     /*  Date string methods - detection of different date formats, verification of ranges and formating
     *
     */
-    private function normalizeTextDateString(string $string):string
+
+    private function numeric2dateTimeArr(string $string):array
     {
-        $tmpString=' '.(strtolower($string)).' ';
-        // normalize month
+        $dateTimeArr=$this->initDateTime;
+        // YYYMMDD
+        preg_match('/([12][0-9]{3})([01][0-9])([0-3][0-9])/',$string,$match);
+        if (isset($match[0])){
+            $dateTimeArr['date']='{'.$match[1].'-'.$match[2].'-'.$match[3].'}';
+        }
+        return $dateTimeArr;
+    }
+
+    function normalizeDateString(string $dateString):string
+    {
+        $dateComps=['day'=>FALSE,'month'=>FALSE,'year'=>FALSE,];
+        $dateString=preg_replace('/\s/','',$dateString);
+        $dateString=trim(strtolower($dateString));
         foreach(self::MONTHS_NEEDLES as $needle=>$month){
-            if (strpos($tmpString,$needle)===FALSE){continue;}
-            $tmpString=str_replace($needle,$month,$tmpString);
+            if (strpos($dateString,$needle)===FALSE){continue;}
+            $dateComps['month']=self::MONTH2NUMERIC[$month];
+            $dateString=str_replace($needle,'|',$dateString);
+            $comps=preg_split('/[^0-9]+/',trim($dateString,'|'));
+            $dateComps['day']=intval(array_shift($comps));
+            $dateComps['year']=intval(array_shift($comps));
+            return $this->dateComps2date($dateComps);
             break;
         }
-        // detect format august 13., 2021
-        preg_match('/[^a-z]([a-z]{3,20})([^,]{2,5})[,]\s{0,2}([0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[0])){
-            $date=$this->createDateStr($match[2],$match[1],$match[3]);
-            if ($date){
-                return str_replace($match[0],'{'.$date.'}',$tmpString);
-            }
+        $comps=preg_split('/[^0-9]+/',$dateString);
+        if (substr_count($dateString,'-')===2){
+            $indexArr=['day'=>2,'month'=>1,'year'=>0];;
+        } else if (substr_count($dateString,'.')===2){
+            $indexArr=['day'=>0,'month'=>1,'year'=>2];;
         }
-        // detect format 13. august 2021
-        preg_match('/[^0-9]([0-3]{0,1}[0-9])[. ]{1,3}([a-z]{3,20})[. ]{1,3}([0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[0])){
-            $date=$this->createDateStr($match[1],$match[2],$match[3]);
-            if ($date){
-                return str_replace($match[0],'{'.$date.'}',$tmpString);
-            }
-        }
-        return $string;
-    }
-
-    private function normalizeDEdateString(string $string):string
-    {
-        // detect DE format 31.08.2011 oder 31.08.11
-        $tmpString=' '.$string.' ';
-        preg_match('/[^0-9]([0-3]{0,1}[0-9])[.]([0-1]{0,1}[0-9])[.]([0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[0])){
-            $date=$this->createDateStr($match[1],$match[2],$match[3]);
-            if ($date){
-                return str_replace($match[0],'{'.$date.'}',$tmpString);
-            }
-        }
-        return $string;
-    }
-
-    private function normalizeUSdateString(string $string):string
-    {
-        // detect US format 08-31-11
-        $tmpString=' '.$string.' ';
-        preg_match('/[^0-9]([0-1]{0,1}[0-9])[\-]([0-3]{0,1}[0-9])[\-]([0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[0])){
-            $date=$this->createDateStr($match[2],$match[1],$match[3]);
-            if ($date){
-                return str_replace($match[0],'{'.$date.'}',$tmpString);
-            }
-        }
-        return $string;
-    }
-
-    private function normalizeSystemdateString(string $string):string
-    {
-        // detect US format 2011-08-31
-        $tmpString=' '.$string.' ';
-        preg_match('/[^0-9]([0-9]{4}[\-][0-1]{0,1}[0-9][\-][0-3]{1}[0-9]{1})[^0-9]/',$tmpString,$match);
-        if (isset($match[1])){
-            return str_replace($match[0],'{'.$match[1].'}',$tmpString);
-        }
-        return $string;
-    }
-
-    private function normalizeUKdateString(string $string):string
-    {
-        $tmpString=' '.$string.' ';
-        preg_match('/[^0-9]([0-3]{0,1}[0-9])[\/]([0-3]{0,1}[0-9])[\/]([0-9]{2,4})[^0-9]/',$tmpString,$match);
-        if (isset($match[0])){
-            // try UK format 31/08/2011
-            $date=$this->createDateStr($match[1],$match[2],$match[3]);
-            if ($date){
-                return str_replace($match[0],'{'.$date.'}',$tmpString);
-            } else {
-                // try US format 08/31/2011
-                $date=$this->createDateStr($match[2],$match[1],$match[3]);
-                if ($date){
-                    return str_replace($match[0],'{'.$date.'}',$tmpString);
+        foreach($comps as $index=>$comp){
+            $comp=intval($comp);
+            if ($comp>31 && $dateComps['year']===FALSE){
+                $dateComps['year']=$comp;
+            } else if ($comp>12 && $dateComps['day']===FALSE){
+                $dateComps['day']=$comp;
+                if ($index===0){
+                    $indexArr=['day'=>0,'month'=>1,'year'=>2];
+                } else if ($index===1){
+                    $indexArr=['day'=>1,'month'=>0,'year'=>2];
                 }
             }
         }
-        return $string;
-    }
-    
-    private function createDateStr(string $day, string $month, string $year):string|bool
-    {
-        try {
-            $dateStr='';
-            $dateStr.=$this->getYearStr($year);
-            $dateStr.='-'.$this->getMonthStr($month);
-            $dateStr.='-'.$this->getDayStr($day);
-            return $dateStr;
-        } catch (\Exception $e){
-            return FALSE;
-        }
-    }
-
-    private function getDayStr(string $day):string
-    {
-        $day=intval($day);
-        if ($day>31 || $day<1){
-            throw new \Exception('E105: Parsed day out of range.');
-        }
-        if ($day<10){
-            return '0'.strval($day);
-        } else {
-            return strval($day);
-        }
-    }
-
-    private function getMonthStr(string $month):string
-    {
-        if (!is_numeric($month)){
-            if (isset(self::MONTH2NUMERIC[$month])){
-                return self::MONTH2NUMERIC[$month];
-            } else {
-                throw new \Exception('E106: Parsed month out of range.');
+        $indexArr=$indexArr??((self::DATE_FORMAT_IF_IN_DOUBT_UK)?['day'=>0,'month'=>1,'year'=>2]:['day'=>1,'month'=>0,'year'=>2]);
+        foreach($indexArr as $key=>$index){
+            if ($dateComps[$key]===FALSE){
+                $dateComps[$key]=$comps[$index];
             }
         }
-        $month=intval($month);
-        if ($month>12 || $month<1){
-            throw new \Exception('E107: Parsed month out of range.');
-        }
-        if ($month<10){
-            return '0'.strval($month);
-        } else {
-            return strval($month);
-        }
+        return $this->dateComps2date($dateComps);
     }
 
-    private function getYearStr(string $year):string
+    private function dateComps2date(array $dateComps):string
     {
-        if (strlen($year)===4){return $year;}
-        $year=intval($year);
-        if ($year>999){
-            return strval($year);
-        } else if ($year>99){
-            return '2'.strval($year);
-        } else if ($year<self::YEAR_2000_THRESHOLD){
-            $year+=2000;
+        if ($dateComps['year']<self::YEAR_2000_THRESHOLD){
+            $dateComps['year']='20'.str_pad(strval($dateComps['year']),2,'0',STR_PAD_LEFT);
+        } else if ($dateComps['year']<100){
+            $dateComps['year']='19'.str_pad(strval($dateComps['year']),2,'0',STR_PAD_LEFT);
         } else {
-            $year+=1900;
+            $dateComps['year']=str_pad(strval($dateComps['year']),4,'0',STR_PAD_LEFT);
         }
-        return strval($year);
+        $dateComps['month']=str_pad(strval($dateComps['month']),2,'0',STR_PAD_LEFT);
+        $dateComps['day']=str_pad(strval($dateComps['day']),2,'0',STR_PAD_LEFT);
+        return '{'.$dateComps['year'].'-'.$dateComps['month'].'-'.$dateComps['day'].'}';
     }
 
 }
