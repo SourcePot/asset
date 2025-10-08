@@ -16,6 +16,14 @@ final class DateTimeParser{
 
     private const DATE_FORMAT_IF_IN_DOUBT_UK=TRUE;
 
+    private const DATE_FILTER=[
+        '/[0-3]{0,1}[0-9][.]{0,1}[a-zäüö]{3,15}[0-9]{2,4}/',
+        '/[a-zäüö]{3,15}[0-3]{0,1}[0-9][.,]{1,2}[0-9]{2,4}/',
+        '/[0-9]{4}-[0-9]{2}-[0-9]{2}/',
+        '/[0-3]{0,1}[0-9]\/[0-3]{0,1}[0-9]\/[0-9]{2,4}/',
+        '/[0-3]{0,1}[0-9][.][0-3]{0,1}[0-9][.][0-9]{2,4}/',
+    ];
+
     private const MONTHS_NEEDLES=[
         'january'=>'january','januar'=>'january','enero'=>'january','janvier'=>'january','jan.'=>'january','jan'=>'january',
         'february'=>'february','februar'=>'february','febrero'=>'february','février'=>'february','feb.'=>'february','feb'=>'february',
@@ -338,18 +346,27 @@ final class DateTimeParser{
     function normalizeDateString(string $dateString):string
     {
         $dateComps=['day'=>FALSE,'month'=>FALSE,'year'=>FALSE,];
+        // filter raw string
+        $dateString=strtolower($dateString);
         $dateString=preg_replace('/\s/','',$dateString);
-        $dateString=trim(strtolower($dateString));
+        foreach(self::DATE_FILTER as $filter){
+            preg_match($filter,$dateString,$match);
+            if (empty($match[0])){continue;}
+            $dateString=$match[0];
+            break;
+        }
+        // if name of month is provided
         foreach(self::MONTHS_NEEDLES as $needle=>$month){
             if (strpos($dateString,$needle)===FALSE){continue;}
             $dateComps['month']=self::MONTH2NUMERIC[$month];
             $dateString=str_replace($needle,'|',$dateString);
-            $comps=preg_split('/[^0-9]+/',trim($dateString,'|'));
+            $comps=preg_split('/[^0-9]+/',trim($dateString,'|'),-1,PREG_SPLIT_NO_EMPTY);
             $dateComps['day']=intval(array_shift($comps));
             $dateComps['year']=intval(array_shift($comps));
             return $this->dateComps2date($dateComps);
             break;
         }
+        // if date consists of 3 numeric values
         $comps=preg_split('/[^0-9]+/',$dateString);
         if (substr_count($dateString,'-')===2){
             $indexArr=['day'=>2,'month'=>1,'year'=>0];;
@@ -369,6 +386,7 @@ final class DateTimeParser{
                 }
             }
         }
+        // add missing date components
         $indexArr=$indexArr??((self::DATE_FORMAT_IF_IN_DOUBT_UK)?['day'=>0,'month'=>1,'year'=>2]:['day'=>1,'month'=>0,'year'=>2]);
         foreach($indexArr as $key=>$index){
             if ($dateComps[$key]===FALSE){
