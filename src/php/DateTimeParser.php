@@ -16,12 +16,24 @@ final class DateTimeParser{
 
     private const DATE_FORMAT_IF_IN_DOUBT_UK=TRUE;
 
+    private const TIME_FILTER=[
+        'HH:MM:SS'=>'/([0-2][0-9]):([0-5][0-9]):([0-5][0-9])/',
+        'HH.MM pm'=>'/([0-1]{0,1}[0-9])[:.]([0-5][0-9]){0,1}([ap][.]{0,1}[m])/',
+        'HH:MM Uhr'=>'/([0-2]{0,1}[0-9])[:.]([0-5][0-9])[uhr]{0,3}/',
+        'HHhMM'=>'/([0-1]{0,1}[0-9])[h]([0-5][0-9])/',
+        '12noon'=>'/(12)noon/',
+        '12midnight'=>'/(12)midnight/',
+    ];
+
     private const DATE_FILTER=[
-        '/[0-3]{0,1}[0-9][.]{0,1}[a-zäüö]{3,15}[0-9]{2,4}/',
-        '/[a-zäüö]{3,15}[0-3]{0,1}[0-9][.,]{1,2}[0-9]{2,4}/',
-        '/[0-9]{4}-[0-9]{2}-[0-9]{2}/',
-        '/[0-3]{0,1}[0-9]\/[0-3]{0,1}[0-9]\/[0-9]{2,4}/',
-        '/[0-3]{0,1}[0-9][.][0-3]{0,1}[0-9][.][0-9]{2,4}/',
+        'DD Month YYYY'=>'/[0-3]{0,1}[0-9][.]{0,1}[a-zäüö]{3,15}[0-9]{2,4}/',
+        'Month MM.,YYYY'=>'/[a-zäüö]{3,15}[0-3]{0,1}[0-9][.,]{1,2}[0-9]{2,4}/',
+        'MM-DD-YYYY'=>'/([0-1][0-9])-([0-3][0-9])-([0-9]{4})/',
+        'YYYY-MM-DD'=>'/([0-9]{4})-([0-9]{2})-([0-9]{2})/',
+        'DD/MM/YYYY'=>'/([0-3]{0,1}[0-9])\/([0-3]{0,1}[0-9])\/([0-9]{2,4})/',
+        'DD.MM.YYYY'=>'/([0-3]{0,1}[0-9])[.]([0-3]{0,1}[0-9])[.]([1-2][0-9][0-9][0-9])/',
+        'DD.MM.YY'=>'/([0-3]{0,1}[0-9])[.]([0-3]{0,1}[0-9])[.]([0-9][0-9])/',
+        'YYYYMMDD'=>'/([12][0-9]{3})([01][0-9])([0-3][0-9])/',
     ];
 
     private const MONTHS_NEEDLES=[
@@ -51,6 +63,8 @@ final class DateTimeParser{
 
     private $dateTime=NULL;
 
+    private $isValid=FALSE;
+
     function __construct()
     {
         $this->dateTime=new \DateTime('now');
@@ -72,8 +86,7 @@ final class DateTimeParser{
 
     final public function isValid():bool
     {
-        $initDateTimeStr=implode(' ',$this->initDateTime);
-        return !($this->dateTime->format('Y-m-d H:i:s')===$initDateTimeStr);
+        return $this->isValid;
     }
 
     final public function getDateTime():\DateTime
@@ -101,7 +114,7 @@ final class DateTimeParser{
         $dateTimeArr['DE long']=$this->dateTime->format('j').'. '.self::MONTHS_DICT_DE[$this->dateTime->format('m')].' '.$this->dateTime->format('Y');
         $dateTimeArr['FR long']='le '.$this->dateTime->format('j').' '.self::MONTHS_DICT_FR[$this->dateTime->format('m')].' '.$this->dateTime->format('Y');
         $dateTimeArr['ES long']=$this->dateTime->format('j').' de '.self::MONTHS_DICT_ES[$this->dateTime->format('m')].' de '.$this->dateTime->format('Y');
-        $dateTimeArr['isValid']=$this->isValid();
+        $dateTimeArr['isValid']=$this->isValid;
         return $dateTimeArr;
     }
 
@@ -126,12 +139,13 @@ final class DateTimeParser{
         if (isset($match[0])){
             $this->initDateTime=['date'=>$match[1],'time'=>$match[2]];
         } else {
-            throw new \Exception('E104: Invalkid initDateTime "'.$dateTime.'". Required format is "Y-m-d H:i:s"');
+            throw new \Exception('E104: Invalid initDateTime "'.$dateTime.'". Required format is "Y-m-d H:i:s"');
         }
     }
 
     final public function setFromTimestamp($timestamp)
     {
+        $this->isValid=!empty($timestamp);
         if (empty($timestamp)){
             $dateTimetStr=implode(' ',$this->initDateTime);
             $this->dateTime=new \DateTime($dateTimetStr);
@@ -143,6 +157,7 @@ final class DateTimeParser{
 
     final public function setFromExcelTimestamp($excelTimestamp)
     {
+        $this->isValid=!empty($timestamp);
         if (empty($excelTimestamp)){
             $dateTimetStr=implode(' ',$this->initDateTime);
             $this->dateTime=new \DateTime($dateTimetStr);
@@ -152,32 +167,39 @@ final class DateTimeParser{
         }
     }
 
-    final public function setFromString(string $string,\DateTimeZone $timeZone=new \DateTimeZone(self::DEFAULT_TIMEZONE)):bool
+    final public function setFromString(string $string,$timeZone=NULL):bool
     {
-        // is numeric
-        if (is_numeric($string)){
-            $dateTimeArr=$this->numeric2dateTimeArr($string);
-            $string=$dateTimeArr['date'].' '.$dateTimeArr['time'];
-            $this->dateTime=new \DateTime($string,$timeZone);
-        } else {
-            // try to parse date time
-            $dateTimeArr=$this->str2dateTimeArr($string);
-            $dateTimeStr=$dateTimeArr['date'].' '.$dateTimeArr['time'];
-            if (empty($dateTimeArr['timezone'])){
-                $this->dateTime=new \DateTime($dateTimeStr,$timeZone);
-            } else {
-                $parsedTimeZone=new \DateTimeZone($dateTimeArr['timezone']);
-                $this->dateTime=new \DateTime($dateTimeStr,$parsedTimeZone);
-                $this->dateTime->setTimezone($timeZone);
-            }
-            if (!$this->isValid()){
-                try {
-                    $this->dateTime=new \DateTime($string,$timeZone);
-                } catch (\Exception $e){
-                    // nothing to do
-                }
-            }
+        try {
+            $dateTimeFromString=new \DateTime($string,$timeZone);
+        } catch (\Exception $e){
+            $dateTimeFromString=NULL;
         }
+        // parse timezone
+        $dateTimeArr['timezone']=$this->string2timezoneString($string);
+        $timeZone=$timeZone??new \DateTimeZone($dateTimeArr['timezone']);
+        // parse offset
+        $dateTimeArr['offset']=$this->string2offset($string);
+        // parse date
+        $comps=$this->dateString2comps($comps['string']??$string);
+        $dateTimeArr['date']=$this->dateComps2date($comps);
+        // parse time
+        $comps=$this->timeString2comps($comps['string']??$string);
+        $dateTimeArr['time']=$this->timeComps2time($comps);
+        // compile all
+        $dateTimeStr=trim($dateTimeArr['date'].' '.$dateTimeArr['time'].' '.$dateTimeArr['offset']);
+        try {
+            $dateTimeFromParsedString=new \DateTime($dateTimeStr,$timeZone);
+        } catch (\Exception $e){
+            $dateTimeFromParsedString=NULL;
+        }
+        $dateTime=(strlen($string)>13)?($dateTimeFromString??$dateTimeFromParsedString):($dateTimeFromParsedString??$dateTimeFromString);
+        if (empty($dateTime)){
+            $initDateTime=implode(' ',$this->initDateTime);
+            $this->dateTime=new \DateTime($initDateTime);
+        } else {
+            $this->dateTime=$dateTime;
+        }
+        $this->isValid=!empty($dateTime);
         return $this->isValid();
     }
 
@@ -190,170 +212,117 @@ final class DateTimeParser{
     }
 
     /**
-     * Date-time parser methods
+     *  Timezone string methods 
+     */
+    private function string2timezoneString(string $string):string
+    {
+        $string=strtolower($string);
+        foreach(\DateTimeZone::listIdentifiers() as $fullName){
+            $nameComps=explode('/',strtolower($fullName));
+            $name=array_pop($nameComps);
+            if (strpos($string,$fullName)!==FALSE){
+                $timeZone=$fullName;
+                break;
+            }
+            if (strpos($string,$name)!==FALSE){
+                $timeZone=$fullName;
+            }
+        }
+        return $timeZone=$timeZone??self::DEFAULT_TIMEZONE;
+    }
+
+    private function string2offset(string $string):string
+    {
+        preg_match('/[+\-]{1}[0-9]{2}:{0,1}[0-9]{2}/',$string,$match);
+        return $match[0]??'';
+    }
+
+    /**
+     *  Time string methods - detection of different time formats 
      */
 
-    private function str2dateTimeArr(string $string):array
+    private function timeString2comps(string $timeString):array
     {
-        $dateTimeArr=$this->initDateTime;
-        // parse timezone
-        foreach(\DateTimeZone::listIdentifiers() as $timezoneStr){
-            if (strpos($string,$timezoneStr)===FALSE){continue;}
-            if (strlen($timezoneStr)<4){continue;}  
-            $dateTimeArr['timezone']=$timezoneStr;
+        $initComps=explode(':',$this->initDateTime['time']);
+        $comps=['hour'=>$initComps[0],'min'=>$initComps[1],'sec'=>$initComps[2],'type'=>'','string'=>$timeString,'exception'=>''];
+        // filter raw string
+        $timeString=strtolower($timeString);
+        $timeString=preg_replace('/\s/','',$timeString);
+        foreach(self::TIME_FILTER as $type=>$filter){
+            preg_match($filter,$timeString,$match);
+            if (empty($match[0])){continue;}
+            $comps=match($type){
+                'HH.MM pm'=>$this->normalizeUKtime($match),
+                'HH:MM Uhr'=>['hour'=>intval($match[1]),'min'=>intval($match[2]),'sec'=>0,'type'=>$type],
+                'HHhMM'=>['hour'=>intval($match[1]),'min'=>intval($match[2]),'sec'=>0,'type'=>$type],
+                'HH:MM:SS'=>['hour'=>intval($match[1]),'min'=>intval($match[2]),'sec'=>intval($match[3]),'type'=>$type],
+                '12noon'=>['hour'=>12,'min'=>0,'sec'=>0,'type'=>$type],
+                '12midnight'=>['hour'=>0,'min'=>0,'sec'=>0,'type'=>$type],
+            };
+            $comps['string']=str_replace($match[0],'',$timeString);
+            $comps['exception']=($comps['hour']>24)?', Parsed hours out of range':'';
+            $comps['exception']=($comps['min']>69)?', Parsed minutes out of range':'';
+            $comps['exception']=($comps['sec']>69)?', Parsed seconds out of range':'';
+            $comps['exception']=trim($comps['exception'],' ,');
             break;
         }
-        // parse time
-        $string=$this->normalizeUKtimeString($string);
-        $string=$this->normalizeSystemTimeString($string);
-        preg_match('/\{([0-9]{2}:[0-9]{2}:[0-9]{2})\}/',$string,$match);
-        if (isset($match[1])){
-            // valid time detected
-            $string=str_replace($match[0],'',$string);
-            $dateTimeArr['time']=$match[1];
-        }
-        // parse date
-        $string=$this->normalizeDateString($string);
-        preg_match('/\{([0-9]{4}-[0-9]{2}-[0-9]{2})\}/',$string,$match);
-        if (isset($match[1])){
-            // valid date detected
-            $string=str_replace($match[0],'',$string);
-            $dateTimeArr['date']=$match[1];
-        } else {
-            throw new \Exception('E100: Parsed hour out of range.');
-        }
-        return $dateTimeArr;
+        return $comps;
     }
 
-    /*
-    *   Time string methods - detection of different time formats, verification of ranges and formating
-    */
+    private function normalizeUKtime($match):array
+    {
+        $timeComps=['hour'=>intval($match[1]),'min'=>intval($match[2]),'sec'=>0,'type'=>'HH.MM pm','function'=>__FUNCTION__];
+        $amPm=preg_replace('/[^apm]/','',$match[3]);
+        if ($amPm==='am'){
+            $timeComps['hour']=($timeComps['hour']===12)?0:$timeComps['hour'];
+        } else {
+            $timeComps['hour']=($timeComps['hour']===12)?12:($timeComps['hour']+12);
+        }
+        return $timeComps;
+    }
     
-    private function normalizeSystemTimeString(string $string):string
+    private function timeComps2time($timeComps):string
     {
-        $tmpString=' '.$string.' ';
-        // detect 12:34:56
-        preg_match('/[^0-9]([0-2][0-9][:][0-5][0-9][:][0-5][0-9])[^0-9]/',$tmpString,$match);
-        if (isset($match[0])){
-            return str_replace($match[0],'{'.$match[1].'}',$tmpString);
-        } else {
-            // detect 12:34
-            preg_match('/[^0-9]([0-2][0-9][:][0-5][0-9])[^0-9]/',$tmpString,$match);
-            if (isset($match[0])){
-                return str_replace($match[0],'{'.$match[1].':00}',$tmpString);
-            }        
-        }
-        return $string;
+        $timeComps['sec']=str_pad(strval($timeComps['sec']),2,'0',STR_PAD_LEFT);
+        $timeComps['min']=str_pad(strval($timeComps['min']),2,'0',STR_PAD_LEFT);
+        $timeComps['hour']=str_pad(strval($timeComps['hour']),2,'0',STR_PAD_LEFT);
+        return $timeComps['hour'].':'.$timeComps['min'].':'.$timeComps['sec'];
     }
 
-    private function normalizeUKtimeString(string $string):string
-    {
-        $tmpString=' '.strtolower($string).' ';
-        // get type identifier
-        preg_match('/[0-9 ]((am)|(pm)|(hrs)|(uhr))[^a-z]/',$tmpString,$match);
-        if (!isset($match[1])){return $string;}
-        $timeType=$match[1];
-        // ectract huors, minutes, seconds 3:45am | 3:45pm | 15.45hrs
-        preg_match('/[^0-9]([0-2]{0,1}[0-9])([:.][0-5]{0,1}[0-9]){0,1}([:.][0-5]{0,1}[0-9]){0,1}('.$timeType.')/',$tmpString,$match);
-        if (empty($match[0])){return $string;}
-        $keys=['string','h','m','s','type'];
-        $timeComps=[];
-        foreach($match as $index=>$value){
-            if ($index===0 || $index===4){continue;}
-            $value=preg_replace('/[^0-9]/','',$value);
-            $timeComps[$keys[$index]]=intval($value);
-        }
-        // adjust hour dependend on am | pm
-        if ($timeType=='am'){
-            $timeComps['h']=($timeComps['h']===12)?0:$timeComps['h'];
-        } else if ($timeType=='pm'){
-            $timeComps['h']=($timeComps['h']===12)?12:(12+$timeComps['h']);
-        }
-        $time=$this->createTimeStr(strval($timeComps['s']),strval($timeComps['m']),strval($timeComps['h']));
-        if ($time){
-            return str_replace($match[0],'{'.$time.'}',$tmpString);
-        }
-        return $string;
-    }
+    /**
+     *  Date string methods - detection of different date formats, verification of ranges and formating
+     */
 
-    private function createTimeStr(string $second, string $minute, string $hour):string|bool
-    {
-        try {
-            $timeStr='';
-            $timeStr.=$this->getHourStr($hour);
-            $timeStr.=':'.$this->getMinuteStr($minute);
-            $timeStr.=':'.$this->getSecondStr($second);
-            return $timeStr;
-        } catch (\Exception $e){
-            return FALSE;
-        }
-    }
-
-    private function getHourStr(string $hour):string
-    {
-        $hour=intval($hour);
-        if ($hour>23 || $hour<0){
-            throw new \Exception('E101: Parsed hour out of range.');
-        }
-        if ($hour<10){
-            return '0'.strval($hour);
-        } else {
-            return strval($hour);
-        }
-    }
-
-    private function getMinuteStr(string $minute):string
-    {
-        $minute=intval($minute);
-        if ($minute>59 || $minute<0){
-            throw new \Exception('E102: Parsed minute out of range.');
-        }
-        if ($minute<10){
-            return '0'.strval($minute);
-        } else {
-            return strval($minute);
-        }
-    }
-
-    private function getSecondStr(string $second):string
-    {
-        $second=intval($second);
-        if ($second>59 || $second<0){
-            throw new \Exception('E103: Parsed second out of range.');
-        }
-        if ($second<10){
-            return '0'.strval($second);
-        } else {
-            return strval($second);
-        }
-    }
-
-    /*  Date string methods - detection of different date formats, verification of ranges and formating
-    *
-    */
-
-    private function numeric2dateTimeArr(string $string):array
-    {
-        $dateTimeArr=$this->initDateTime;
-        // YYYMMDD
-        preg_match('/([12][0-9]{3})([01][0-9])([0-3][0-9])/',$string,$match);
-        if (isset($match[0])){
-            $dateTimeArr['date']='{'.$match[1].'-'.$match[2].'-'.$match[3].'}';
-        }
-        return $dateTimeArr;
-    }
-
-    function normalizeDateString(string $dateString):string
+    function dateString2comps(string $dateString):array
     {
         $dateComps=['day'=>FALSE,'month'=>FALSE,'year'=>FALSE,];
         // filter raw string
         $dateString=strtolower($dateString);
         $dateString=preg_replace('/\s/','',$dateString);
-        foreach(self::DATE_FILTER as $filter){
+        foreach(self::DATE_FILTER as $format=>$filter){
             preg_match($filter,$dateString,$match);
             if (empty($match[0])){continue;}
-            $dateString=$match[0];
-            break;
+            $string=str_replace($match[0],'',$dateString);
+            if ($format==='YYYYMMDD'){
+                return ['day'=>intval($match[3]),'month'=>intval($match[2]),'year'=>intval($match[1]),'string'=>$string];
+            } else if ($format==='DD.MM.YYYY' || $format==='DD.MM.YY'){
+                return ['day'=>intval($match[1]),'month'=>intval($match[2]),'year'=>intval($match[3]),'string'=>$string];
+            } else if ($format==='YYYY-MM-DD'){
+                return ['day'=>intval($match[3]),'month'=>intval($match[2]),'year'=>intval($match[1]),'string'=>$string];
+            } else if ($format==='MM-DD-YYYY'){
+                return ['day'=>intval($match[2]),'month'=>intval($match[1]),'year'=>intval($match[3]),'string'=>$string];
+            } else if ($format==='DD/MM/YYYY'){
+                $A=intval($match[1]);
+                $B=intval($match[2]);
+                $C=intval($match[3]);
+                if ($A>12){
+                    return ['day'=>$A,'month'=>$B,'year'=>$C,];
+                } else if ($B>12){
+                    return ['day'=>$B,'month'=>$A,'year'=>$C,];
+                } else {
+                    return (self::DATE_FORMAT_IF_IN_DOUBT_UK)?['day'=>$A,'month'=>$B,'year'=>$C,'string'=>$string]:['day'=>$B,'month'=>$A,'year'=>$C,'string'=>$string];
+                }
+            }
         }
         // if name of month is provided
         foreach(self::MONTHS_NEEDLES as $needle=>$month){
@@ -361,43 +330,22 @@ final class DateTimeParser{
             $dateComps['month']=self::MONTH2NUMERIC[$month];
             $dateString=str_replace($needle,'|',$dateString);
             $comps=preg_split('/[^0-9]+/',trim($dateString,'|'),-1,PREG_SPLIT_NO_EMPTY);
-            $dateComps['day']=intval(array_shift($comps));
-            $dateComps['year']=intval(array_shift($comps));
-            return $this->dateComps2date($dateComps);
+            $dateComps['day']=array_shift($comps);
+            $dateComps['day']=intval($dateComps['day']);
+            $dateComps['year']=array_shift($comps);
+            $dateComps['year']=substr($dateComps['year'],0,4);
+            $dateComps['year']=intval($dateComps['year']);
+            return $dateComps;
             break;
         }
-        // if date consists of 3 numeric values
-        $comps=preg_split('/[^0-9]+/',$dateString);
-        if (substr_count($dateString,'-')===2){
-            $indexArr=['day'=>2,'month'=>1,'year'=>0];;
-        } else if (substr_count($dateString,'.')===2){
-            $indexArr=['day'=>0,'month'=>1,'year'=>2];;
-        }
-        foreach($comps as $index=>$comp){
-            $comp=intval($comp);
-            if ($comp>31 && $dateComps['year']===FALSE){
-                $dateComps['year']=$comp;
-            } else if ($comp>12 && $dateComps['day']===FALSE){
-                $dateComps['day']=$comp;
-                if ($index===0){
-                    $indexArr=['day'=>0,'month'=>1,'year'=>2];
-                } else if ($index===1){
-                    $indexArr=['day'=>1,'month'=>0,'year'=>2];
-                }
-            }
-        }
-        // add missing date components
-        $indexArr=$indexArr??((self::DATE_FORMAT_IF_IN_DOUBT_UK)?['day'=>0,'month'=>1,'year'=>2]:['day'=>1,'month'=>0,'year'=>2]);
-        foreach($indexArr as $key=>$index){
-            if ($dateComps[$key]===FALSE){
-                $dateComps[$key]=$comps[$index];
-            }
-        }
-        return $this->dateComps2date($dateComps);
+        return $dateComps;
     }
 
     private function dateComps2date(array $dateComps):string
     {
+        if (empty($dateComps['year']) || empty($dateComps['month']) || empty($dateComps['day'])){
+            return $this->initDateTime['date'];
+        }
         if ($dateComps['year']<self::YEAR_2000_THRESHOLD){
             $dateComps['year']='20'.str_pad(strval($dateComps['year']),2,'0',STR_PAD_LEFT);
         } else if ($dateComps['year']<100){
@@ -407,8 +355,7 @@ final class DateTimeParser{
         }
         $dateComps['month']=str_pad(strval($dateComps['month']),2,'0',STR_PAD_LEFT);
         $dateComps['day']=str_pad(strval($dateComps['day']),2,'0',STR_PAD_LEFT);
-        return '{'.$dateComps['year'].'-'.$dateComps['month'].'-'.$dateComps['day'].'}';
+        return $dateComps['year'].'-'.$dateComps['month'].'-'.$dateComps['day'];
     }
-
 }
 ?>
