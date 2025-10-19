@@ -333,7 +333,7 @@ final class DateTimeParser{
             $dateComps['day']=array_shift($comps);
             $dateComps['day']=intval($dateComps['day']);
             $dateComps['year']=array_shift($comps);
-            $dateComps['year']=substr($dateComps['year'],0,4);
+            $dateComps['year']=substr($dateComps['year']??'',0,4);
             $dateComps['year']=intval($dateComps['year']);
             return $dateComps;
             break;
