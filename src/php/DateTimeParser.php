@@ -34,6 +34,7 @@ final class DateTimeParser{
         'DD.MM.YYYY'=>'/([0-3]{0,1}[0-9])[.]([0-3]{0,1}[0-9])[.]([1-2][0-9][0-9][0-9])/',
         'DD.MM.YY'=>'/([0-3]{0,1}[0-9])[.]([0-3]{0,1}[0-9])[.]([0-9][0-9])/',
         'YYYYMMDD'=>'/([12][0-9]{3})([01][0-9])([0-3][0-9])/',
+        'YYYY年MM月DD'=>'/([12][0-9]{3})[年 ]{1,3}([01]{0,1}[0-9])[月 ]{1,3}([0-3]{0,1}[0-9])[日号 ]{1,2}/',
     ];
 
     private const MONTHS_NEEDLES=[
@@ -298,7 +299,7 @@ final class DateTimeParser{
         $dateComps=['day'=>FALSE,'month'=>FALSE,'year'=>FALSE,];
         // filter raw string
         $dateString=strtolower($dateString);
-        $dateString=preg_replace('/\s/','',$dateString);
+        $dateString=preg_replace('/\s/u','',$dateString);
         foreach(self::DATE_FILTER as $format=>$filter){
             preg_match($filter,$dateString,$match);
             if (empty($match[0])){continue;}
@@ -311,6 +312,8 @@ final class DateTimeParser{
                 return ['day'=>intval($match[3]),'month'=>intval($match[2]),'year'=>intval($match[1]),'string'=>$string];
             } else if ($format==='MM-DD-YYYY'){
                 return ['day'=>intval($match[2]),'month'=>intval($match[1]),'year'=>intval($match[3]),'string'=>$string];
+            } else if ($format==='YYYY年MM月DD'){
+                return ['day'=>intval($match[3]),'month'=>intval($match[2]),'year'=>intval($match[1]),'string'=>$string];
             } else if ($format==='DD/MM/YYYY'){
                 $A=intval($match[1]);
                 $B=intval($match[2]);
