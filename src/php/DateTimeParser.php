@@ -106,6 +106,7 @@ final class DateTimeParser{
         $dateTimeArr['US']=$this->dateTime->format('m-d-Y');
         $dateTimeArr['UK']=$this->dateTime->format('d/m/Y');
         $dateTimeArr['DE']=$this->dateTime->format('d.m.Y');
+        $dateTimeArr['CN']=$this->dateTime->format('Y年m月d日');
         $dateTimeArr['RFC2822']=$this->dateTime->format(\DateTimeInterface::RFC2822);
         $dateTimeArr['day']=$this->dateTime->format('d');
         $dateTimeArr['month']=$this->dateTime->format('m');
