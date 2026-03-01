@@ -58,7 +58,7 @@ final class DateTimeParser{
     private const MONTHS_DICT_ES=['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril','05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto','09'=>'septiembr','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
     private const MONTHS_DICT_FR=['01'=>'janvier','02'=>'février','03'=>'mars','04'=>'avril','05'=>'mai','06'=>'juin','07'=>'juillet','08'=>'août','09'=>'septembre','10'=>'octobre','11'=>'novembre','12'=>'décembre'];
     
-    private $initDateTime=['date'=>'0000-01-01','time'=>'12:00:00'];
+    private $initDateTime=['date'=>'0000-01-01','time'=>'00:00:00'];
 
     private const YEAR_2000_THRESHOLD=50;
 
