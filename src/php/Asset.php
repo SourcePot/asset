@@ -24,7 +24,7 @@ use \Money\Exchange\FixedExchange;
 final class Asset{
 
     private const DEFAULT_UNIT='EUR';
-    private const UNIT_ALIAS=['£'=>'GBP','€'=>'EUR','AU$'=>'AUD','$'=>'USD','US$'=>'USD'];
+    private const UNIT_ALIAS=['£'=>'GBP','€'=>'EUR','AU$'=>'AUD','$'=>'USD','US$'=>'USD','¥'=>'JPY'];
     private const BCMATH_SCALE=6;
     public const NUMBER_REGEX='/([+\-]{0,1})(([., ]{0,1}[0-9]+)+)(([eE+\-]{0,2}[0-9.,]+){0,1})/';
     
@@ -82,12 +82,18 @@ final class Asset{
     public function getArray():array
     {
         $decimals=$this->currencies->subunitFor(new Currency($this->asset['unit']));
-        $assetArr=['ISO 8601'=>$this->asset['dateTime']->format('c'),'RFC 2822'=>$this->asset['dateTime']->format('r'),'Timestamp'=>$this->asset['dateTime']->getTimestamp(),'Currency'=>$this->asset['unit'],'Currency (long)'=>$this->asset['Currency'],'Amount'=>round($this->asset['value'],$decimals)];
+        $assetArr=['string'=>$this->asset['value'].' '.$this->asset['unit'].' on '.$this->asset['dateTime']->format('c')];
+        $assetArr['ISO 8601']=$this->asset['dateTime']->format('c');
+        $assetArr['RFC 2822']=$this->asset['dateTime']->format('r');
+        $assetArr['Timestamp']=$this->asset['dateTime']->getTimestamp();
+        $assetArr['Unit']=$this->asset['unit'];
+        $assetArr['Currency (long)']=$this->asset['Currency'];
+        $assetArr['Amount']=round($this->asset['value'],$decimals);
         $assetArr['Amount de']=number_format($this->asset['value'],$decimals,',','');
-        $assetArr['Amount (US)']=$assetArr['Currency'].' '.number_format($this->asset['value'],$decimals);
-        $assetArr['Amount (DE)']=number_format($this->asset['value'],$decimals,',','').' '.$assetArr['Currency'];
-        $assetArr['Amount (DE full)']=number_format($this->asset['value'],$decimals,',','.').' '.$assetArr['Currency'];
-        $assetArr['Amount (FR)']=number_format($this->asset['value'],$decimals,'.',' ').' '.$assetArr['Currency'];
+        $assetArr['Amount (US)']=$assetArr['Unit'].' '.number_format($this->asset['value'],$decimals);
+        $assetArr['Amount (DE)']=number_format($this->asset['value'],$decimals,',','').' '.$assetArr['Unit'];
+        $assetArr['Amount (DE full)']=number_format($this->asset['value'],$decimals,',','.').' '.$assetArr['Unit'];
+        $assetArr['Amount (FR)']=number_format($this->asset['value'],$decimals,'.',' ').' '.$assetArr['Unit'];
         if (!empty($this->asset['string'])){$assetArr['String']=$this->asset['string'];}
         if (!empty($this->asset['Error'])){$assetArr['Error']=$this->asset['Error'];}
         if (!empty($this->asset['Warning'])){$assetArr['Warning']=$this->asset['Warning'];}
@@ -137,6 +143,8 @@ final class Asset{
         $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime];
         $asset['Currency']='??';
         // recover value
+        $string=preg_replace('/[£$€¥]+/','',$string);
+        $string=strtr($string,['–'=>'-','—'=>'-',]);
         preg_match(self::NUMBER_REGEX,$string,$match);
         if (isset($match[0])){
             $numberStr=str_replace(' ','',$match[2]);
