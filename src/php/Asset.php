@@ -24,8 +24,46 @@ use \Money\Exchange\FixedExchange;
 final class Asset{
 
     private const DEFAULT_UNIT='EUR';
-    private const UNIT_ALIAS=['£'=>'GBP','€'=>'EUR','AU$'=>'AUD','$'=>'USD','US$'=>'USD','¥'=>'JPY'];
+    private const CURRENCY_UNIT_ALIAS=[
+        '£'=>'GBP',
+        '€'=>'EUR',
+        'US$'=>'USD',
+        'AU$'=>'AUD',
+        '$'=>'USD',
+        '¥'=>'JPY',
+        '₹'=>'INR',
+        '؋'=>'AFN',
+        '₿'=>'BTC',
+        '₡'=>'CRC',
+        '₢'=>'BRL',
+        '₣'=>'CHF',
+        '₥'=>'FRF',
+        '₦'=>'NGN',
+        '₧'=>'ESP',
+        '₨'=>'PKR',
+        '₩'=>'KRW',
+        '₪'=>'ILS',
+        '₫'=>'VND',
+        '₭'=>'LAK',
+        '₮'=>'MNT',
+        '₯'=>'GRD',
+        '₰'=>'DEM',
+        '₱'=>'PHP',
+        '₲'=>'PYG',
+        '₳'=>'ARA',
+        '₴'=>'UAH',
+        '₵'=>'GHS',
+        '₸'=>'KZT',
+        '₺'=>'TRY',
+        '₼'=>'AZN',
+        '₽'=>'RUB',
+        '₾'=>'GEL',
+    ];
     private const BCMATH_SCALE=6;
+    private const LIMITS=[
+        'max'=>36000000000000,
+        'min'=>0.0001,
+    ];
     public const NUMBER_REGEX='/([+\-]{0,1})(([., ]{0,1}[0-9]+)+)(([eE+\-]{0,2}[0-9.,]+){0,1})/';
     
     private $currencies;
@@ -57,11 +95,19 @@ final class Asset{
 
     public function set(float|string $value=0,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL)
     {
-        $unit=$this->normalizeUnit($unit);
-        $this->asset=['value'=>floatval($value),'unit'=>$unit,'Currency'=>'??','dateTime'=>$dateTime??new \DateTime('now')];
+        $this->asset=['value'=>floatval($value),'dateTime'=>$dateTime??new \DateTime('now')];
+        $this->asset['string']=$value.' '.$unit.' '.$this->asset['dateTime']->format('c');
+        $this->asset=$this->addUnitFromString($this->asset,$unit);
         // create Money PHP object
         $moneyParser = new DecimalMoneyParser($this->currencies);
-        $this->asset['money']=$moneyParser->parse(strval($value),new \Money\Currency($unit));
+        if (abs($this->asset['value'])>self::LIMITS['max']){
+            $this->asset['value']=($this->asset['value']>0)?self::LIMITS['max']:-self::LIMITS['max'];
+            $this->asset['Warning']='E100: Value is limited to '.$this->asset['value'];
+        } else if (abs($this->asset['value'])<self::LIMITS['min']){
+            $this->asset['value']=($this->asset['value']>0)?self::LIMITS['min']:-self::LIMITS['min'];
+            $this->asset['Warning']='E100: Value is limited to '.$this->asset['value'];
+        }
+        $this->asset['money']=$moneyParser->parse(strval($this->asset['value']),new \Money\Currency($unit));
     }
 
     public function setFromString(string $string,string|NULL $unit=NULL,\DateTime|NULL $dateTime=NULL)
@@ -81,19 +127,19 @@ final class Asset{
      
     public function getArray():array
     {
-        $decimals=$this->currencies->subunitFor(new Currency($this->asset['unit']));
-        $assetArr=['string'=>$this->asset['value'].' '.$this->asset['unit'].' on '.$this->asset['dateTime']->format('c')];
+        $assetArr=$this->asset;
+        $assetArr=$this->addUnitFromString($assetArr);
+        $decimals=$this->currencies->subunitFor(new Currency($assetArr['unit']));
+        $assetArr['string']=$this->asset['value'].' '.$this->asset['unit'].' on '.$this->asset['dateTime']->format('c');
         $assetArr['ISO 8601']=$this->asset['dateTime']->format('c');
         $assetArr['RFC 2822']=$this->asset['dateTime']->format('r');
         $assetArr['Timestamp']=$this->asset['dateTime']->getTimestamp();
-        $assetArr['Unit']=$this->asset['unit'];
-        $assetArr['Currency (long)']=$this->asset['Currency'];
         $assetArr['Amount']=round($this->asset['value'],$decimals);
         $assetArr['Amount de']=number_format($this->asset['value'],$decimals,',','');
-        $assetArr['Amount (US)']=$assetArr['Unit'].' '.number_format($this->asset['value'],$decimals);
-        $assetArr['Amount (DE)']=number_format($this->asset['value'],$decimals,',','').' '.$assetArr['Unit'];
-        $assetArr['Amount (DE full)']=number_format($this->asset['value'],$decimals,',','.').' '.$assetArr['Unit'];
-        $assetArr['Amount (FR)']=number_format($this->asset['value'],$decimals,'.',' ').' '.$assetArr['Unit'];
+        $assetArr['Amount (US)']=$assetArr['unit'].' '.number_format($this->asset['value'],$decimals);
+        $assetArr['Amount (DE)']=number_format($this->asset['value'],$decimals,',','').' '.$assetArr['unit'];
+        $assetArr['Amount (DE full)']=number_format($this->asset['value'],$decimals,',','.').' '.$assetArr['unit'];
+        $assetArr['Amount (FR)']=number_format($this->asset['value'],$decimals,'.',' ').' '.$assetArr['unit'];
         if (!empty($this->asset['string'])){$assetArr['String']=$this->asset['string'];}
         if (!empty($this->asset['Error'])){$assetArr['Error']=$this->asset['Error'];}
         if (!empty($this->asset['Warning'])){$assetArr['Warning']=$this->asset['Warning'];}
@@ -104,48 +150,19 @@ final class Asset{
      * Feature methods
      */
 
-    private function normalizeUnit(string $unit):string{
-        $unit=strtoupper($unit);
-        return self::UNIT_ALIAS[$unit]??$unit;
+    private function normalizeUnit(string|null $unit):string{
+        $unit=strtoupper($unit??'');
+        return self::CURRENCY_UNIT_ALIAS[$unit]??$unit;
     }
 
     final public function guessAssetFromString(string $string,string|NULL $unit=NULL,\DateTime|NULL $dateTime=NULL):array
     {
-        $dateTimeParserObj=new DateTimeParser();
-        $dateTimeParserObj->setFromString($string);
-        if (isset($dateTime)){
-            // nothing to do
-        } else if ($dateTimeParserObj->isValid()){
-            $dateTime=$dateTimeParserObj->get();
-        } else {
-            $dateTime=new \DateTime('now');
-        }
-        // detect unit | currency
-        if ($unit===NULL){
-            foreach(self::UNIT_ALIAS as $needle=>$code){
-                if (strpos($string,$needle)!==FALSE){
-                    $unit=$code;
-                    break;
-                }
-            }
-        }
-        if ($unit===NULL){
-            foreach($this->currencies as $currency){
-                if (strpos($string,$currency->getCode())!==FALSE){
-                    $unit=$currency->getCode();
-                    break;
-                }
-            }
-        } else {
-            $unit=$this->normalizeUnit($unit);
-        }
-        // set template
-        $asset=['value'=>0,'value string'=>'','unit'=>$unit??self::DEFAULT_UNIT,'string'=>$string,'dateTime'=>$dateTime];
-        $asset['Currency']='??';
-        // recover value
-        $string=preg_replace('/[£$€¥]+/','',$string);
-        $string=strtr($string,['–'=>'-','—'=>'-',]);
-        preg_match(self::NUMBER_REGEX,$string,$match);
+        $asset=['string'=>$string];
+        $asset=$this->addDateTimeFromString($asset,$dateTime);
+        $asset=$this->addUnitFromString($asset,$unit);
+        $asset['string']=preg_replace('/[£$€¥]+/','',$asset['string']);
+        $asset['string']=strtr($asset['string'],['–'=>'-','—'=>'-',]);
+        preg_match(self::NUMBER_REGEX,$asset['string'],$match);
         if (isset($match[0])){
             $numberStr=str_replace(' ','',$match[2]);
             $chrArr=count_chars($numberStr,1);
@@ -180,6 +197,49 @@ final class Asset{
         return $asset;
     }
 
+    private function addDateTimeFromString(array $asset,\DateTime|NULL $dateTime=NULL):array
+    {
+        $asset['dateTime']=$dateTime;
+        if (!isset($asset['dateTime'])){
+            $dateTimeParserObj=new DateTimeParser();
+            $dateTimeParserObj->setFromString($asset['string']);
+            if ($dateTimeParserObj->isValid()){
+                $asset['dateTime']=$dateTimeParserObj->get();
+            } else {
+                $asset['dateTime']=new \DateTime('now');
+            }
+        }
+        return $asset;
+    }
+
+    private function addUnitFromString(array $asset,string|null $unit=''):array
+    {
+        $unit=strtoupper($unit?:$asset['unit']?:$asset['string']);
+        $asset['Currency']='';
+        if (isset(self::CURRENCY_UNIT_ALIAS[$unit])){
+            $asset['unit']=$asset['Currency']=self::CURRENCY_UNIT_ALIAS[$unit];
+        }
+        if (empty($asset['Currency'])){
+            foreach(self::CURRENCY_UNIT_ALIAS as $needle=>$code){
+                if (strpos($unit,$needle)!==FALSE){
+                    $asset['unit']=$asset['Currency']=$code;
+                    break;
+                }
+            }
+        }
+        if (empty($asset['Currency'])){
+            foreach($this->currencies as $currency){
+                if (strlen($currency->getCode())<3){continue;}
+                if (strpos($unit,$currency->getCode())!==FALSE){
+                    $asset['unit']=$asset['Currency']=$currency->getCode();
+                    break;
+                }
+            }
+        }
+        $asset['unit']=$asset['unit']??self::DEFAULT_UNIT;
+        return $asset;
+    }
+
     private function valueFromMoney(Money $money):float
     {
         $moneyFormatter = new DecimalMoneyFormatter($this->currencies);
@@ -210,7 +270,6 @@ final class Asset{
             // update asset value, unit and dateTime
             $this->asset['value']=$this->valueFromMoney($this->asset['money']);
             $this->asset['unit']=$unit;
-            $this->asset['Currency']='??';
             $this->asset['string']='';
             // errors and warnings
             if (isset($sourceRate['Error'])){$errors[]=$sourceRate['Error'];}
