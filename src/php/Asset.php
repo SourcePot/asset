@@ -58,6 +58,8 @@ final class Asset{
         '₼'=>'AZN',
         '₽'=>'RUB',
         '₾'=>'GEL',
+        'SEK'=>'SEK',
+        'kr'=>'SEK',
     ];
     private const BCMATH_SCALE=6;
     private const LIMITS=[
