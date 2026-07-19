@@ -157,7 +157,7 @@ final class Asset{
 
     final public function guessAssetFromString(string $string,string|NULL $unit=NULL,\DateTime|NULL $dateTime=NULL):array
     {
-        $asset=['string'=>$string];
+        $asset=['string'=>$string,'value'=>0];
         $asset=$this->addDateTimeFromString($asset,$dateTime);
         $asset=$this->addUnitFromString($asset,$unit);
         $asset['string']=preg_replace('/[£$€¥]+/','',$asset['string']);
