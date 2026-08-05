@@ -181,7 +181,7 @@ final class DateTimeParser{
         }
     }
 
-    final public function setFromString(string $string,$timezone=NULL):bool
+    final public function setFromString(string $string,\DateTimeZone|NULL $timezone=NULL):bool
     {
         $this->orgString=strval($string);
         $dateTimeArr=['string'=>strtolower($string),'isValid'=>FALSE];
@@ -237,7 +237,7 @@ final class DateTimeParser{
                 $dateTimeArr['string']=str_replace($fullName,'',$dateTimeArr['string']);
                 return $dateTimeArr;
             } else if (stripos($dateTimeArr['string'],$name)!==FALSE){
-                $dateTimeArr['timezone']=$name;
+                $dateTimeArr['timezone']=$fullName;
                 $dateTimeArr['string']=str_replace($name,'',$dateTimeArr['string']);
                 return $dateTimeArr;
             }
