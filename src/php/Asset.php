@@ -70,7 +70,10 @@ final class Asset{
     
     private $currencies;
 
-    private $asset=[];
+    private $asset=[
+        'string'=>'',
+        'value'=>0
+    ];
     
     function __construct(float $value=0,string $unit=self::DEFAULT_UNIT,\DateTime|NULL $dateTime=NULL)
     {
@@ -216,7 +219,7 @@ final class Asset{
 
     private function addUnitFromString(array $asset,string|null $unit=''):array
     {
-        $unit=strtoupper($unit?:$asset['unit']?:$asset['string']);
+        $unit=strtoupper($unit?:($asset['unit']??$asset['string']));
         $asset['Currency']='';
         if (isset(self::CURRENCY_UNIT_ALIAS[$unit])){
             $asset['unit']=$asset['Currency']=self::CURRENCY_UNIT_ALIAS[$unit];

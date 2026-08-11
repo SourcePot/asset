@@ -155,7 +155,7 @@ final class DateTimeParser{
         }
     }
 
-    final public function setFromTimestamp(string|int $timestamp)
+    final public function setFromTimestamp(string|int|float $timestamp)
     {
         $this->orgString=strval($timestamp);
         $this->isValid=!empty($timestamp);
@@ -168,7 +168,7 @@ final class DateTimeParser{
         }
     }
 
-    final public function setFromExcelTimestamp(string|int $excelTimestamp)
+    final public function setFromExcelTimestamp(string|int|float $excelTimestamp)
     {
         $this->orgString=strval($excelTimestamp);
         $this->isValid=!empty($excelTimestamp);
