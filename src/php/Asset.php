@@ -127,6 +127,7 @@ final class Asset{
 
     final public function get(string $key='')
     {
+        $this->asset['isValid']=empty($this->asset['Error']);
         return (isset($this->asset[$key]))?$this->asset[$key]:$this->asset;
     }
      
@@ -148,6 +149,7 @@ final class Asset{
         if (!empty($this->asset['string'])){$assetArr['String']=$this->asset['string'];}
         if (!empty($this->asset['Error'])){$assetArr['Error']=$this->asset['Error'];}
         if (!empty($this->asset['Warning'])){$assetArr['Warning']=$this->asset['Warning'];}
+        $assetArr['isValid']=empty($assetArr['Error']);
         return $assetArr;
     }
 

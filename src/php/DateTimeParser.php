@@ -68,6 +68,7 @@ final class DateTimeParser{
     private $orgTimezone='';
 
     private $isValid=FALSE;
+    private $error='';
 
     function __construct()
     {
@@ -123,6 +124,7 @@ final class DateTimeParser{
         $dateTimeArr['orgString']=$this->orgString;
         $dateTimeArr['orgTimezone']=$this->orgTimezone;
         $dateTimeArr['isValid']=$this->isValid;
+        $dateTimeArr['Error']=$this->error;
         return $dateTimeArr;
     }
 
@@ -160,6 +162,7 @@ final class DateTimeParser{
         $this->orgString=strval($timestamp);
         $this->isValid=!empty($timestamp);
         if (empty($timestamp)){
+            $this->error='Method '.__CLASS__.'::'.__FUNCTION__.'(value) failed';
             $dateTimetStr=implode(' ',$this->initDateTime);
             $this->dateTime=new \DateTime($dateTimetStr);
         } else {
@@ -168,16 +171,18 @@ final class DateTimeParser{
         }
     }
 
-    final public function setFromExcelTimestamp(string|int|float $excelTimestamp)
+    final public function setFromExcelTimestamp(string|int|float|bool $excelTimestamp)
     {
+        $excelTimestamp=is_bool($excelTimestamp)?"":$excelTimestamp;
         $this->orgString=strval($excelTimestamp);
         $this->isValid=!empty($excelTimestamp);
-        if (empty($excelTimestamp)){
-            $dateTimetStr=implode(' ',$this->initDateTime);
-            $this->dateTime=new \DateTime($dateTimetStr);
-        } else {
+        if ($this->isValid){
             $timestamp=intval(86400*(floatval($excelTimestamp)-25569));
             $this->dateTime=new \DateTime('@'.$timestamp);
+        } else {
+            $this->error='Method '.__CLASS__.'::'.__FUNCTION__.'(value) failed';
+            $dateTimetStr=implode(' ',$this->initDateTime);
+            $this->dateTime=new \DateTime($dateTimetStr);
         }
     }
 
@@ -205,6 +210,7 @@ final class DateTimeParser{
                 $this->dateTime=new \DateTime($string,$dateTimeArr['timezone']);
                 $this->orgTimezone=$dateTimeArr['timezone']->getName();
             } catch (\Exception $e){
+                $this->error='Method '.__CLASS__.'::'.__FUNCTION__.'(value) failed';
                 $dateTimeArr['isValid']=FALSE;
                 $initDateTime=implode(' ',$this->initDateTime);
                 $this->dateTime=new \DateTime($initDateTime);
