@@ -15,19 +15,32 @@ mb_internal_encoding("UTF-8");
 
 require_once('../../vendor/autoload.php');
 require_once('../php/Rates.php');
+
+set_exception_handler(function(\Throwable $e){
+    $errMessage=$e->getMessage();
+    // logging
+    $err=['date'=>date('Y-m-d H:i:s'),'message'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'code'=>$e->getCode(),'traceAsString'=>$e->getTraceAsString()];
+    $logFileName='../log/'.time().'_exceptionsLog.json';
+    file_put_contents($logFileName,json_encode($err));
+    //fallback page
+    $html='Exception detected, check log file: '.$logFileName.'<br/>'.$errMessage;
+    echo $html;
+    exit;
+});
+
 $ratesObj=new Rates();
 $rates=$ratesObj->getCurrencies();
 
-if (empty($_POST['value'])){$value='100000';} else {$value=$_POST['value'];}
-if (empty($_POST['unit'])){$unit='GBP';} else {$unit=$_POST['unit'];}
-if (empty($_POST['dateTime'])){$dateTime='31 August 2016 2:15pm (Europe/London)';} else {$dateTime=$_POST['dateTime'];}
+if (empty($_POST['value'])){$value='100000';} else {$value=strip_tags($_POST['value']);}
+if (empty($_POST['unit'])){$unit='GBP';} else {$unit=strip_tags($_POST['unit']);}
+if (empty($_POST['dateTime'])){$dateTime='31 August 2016 2:15pm (Europe/London)';} else {$dateTime=strip_tags($_POST['dateTime']);}
 
 // compile html
 $html='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta charset="utf-8"><title>Asset</title><link type="text/css" rel="stylesheet" href="index.css"/></head>';
 $html.='<body><form name="892d183ba51083fc2a0b3d4d6453e20b" id="892d183ba51083fc2a0b3d4d6453e20b" method="post" enctype="multipart/form-data">';
 $html.='<h1>Evaluation Page for the Asset-Package</h1>';
 $html.='<div class="control"><h2>Asset properties for instantiation</h2>';
-$html.='<input type="text" pattern="[0-9.,+\-e]*" value="'.$value.'" name="value" id="value" style="margin:0.25em;"/>';
+$html.='<input type="text" value="'.$value.'" name="value" id="value" style="margin:0.25em;"/>';
 $html.='<select name="unit" id="unit">';
 foreach($rates as $id=>$name){
     $selected=($id===$unit)?' selected':'';
@@ -53,7 +66,7 @@ $html.='<table>';
 $html.='<caption>DateTimeParser object</caption>';
 foreach($dateTimeObj->getArray() as $key=>$value){
     if (is_object($value)){
-        $value=$value->format('Y-m-d');
+        $value='Object of class '.get_class($value);
     } else if (is_bool($value)){
         $value=($value)?'TRUE':'FALSE';
     }
@@ -66,7 +79,7 @@ $html.='<table>';
 $html.='<caption>Asset instance ['.$unit.']</caption>';
 foreach($asset->getArray() as $key=>$value){
     if (is_object($value)){
-        $value=$value->format('Y-m-d');
+        $value='Object of class '.get_class($value);
     }
     $html.='<tr><td>'.$key.'</td><td>'.$value.'</td></tr>';
 }
@@ -84,7 +97,7 @@ $html.='<table>';
 $html.='<caption>Asset instance converted to "'.$unit.'"</caption>';
 foreach($assetArr as $key=>$value){
     if (is_object($value)){
-        $value=$value->format('Y-m-d');
+        $value='Object of class '.get_class($value);
     }
     $html.='<tr><td>'.$key.'</td><td>'.$value.'</td></tr>';
 }
@@ -98,7 +111,7 @@ $html.='<table>';
 $html.='<caption>Investment at '.$interestRate.'% over '.$years.' years</caption>';
 foreach($asset->getArray() as $key=>$value){
     if (is_object($value)){
-        $value=$value->format('Y-m-d');
+        $value='Object of class '.get_class($value);
     }
     $html.='<tr><td>'.$key.'</td><td>'.$value.'</td></tr>';
 }
