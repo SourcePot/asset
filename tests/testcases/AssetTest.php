@@ -4,6 +4,47 @@ use PHPUnit\Framework\TestCase;
 
 final class AssetTest extends TestCase
 {
+    public function testSetPreservesZeroAndNormalizesCurrencySymbols(): void
+    {
+        $asset=new \SourcePot\Asset\Asset(0,'EUR');
+        $this->assertSame(0.0,$asset->get('value'));
+        $this->assertArrayNotHasKey('Warning',$asset->getArray());
+
+        $asset=new \SourcePot\Asset\Asset(12,'US$');
+        $this->assertSame('USD',$asset->get('unit'));
+        $this->assertSame(12.0,$asset->get('value'));
+    }
+
+    public function testSetFromStringRejectsMissingNumber(): void
+    {
+        $asset=new \SourcePot\Asset\Asset();
+        $asset->setFromString('hello');
+        $this->assertFalse($asset->get('isValid'));
+        $this->assertSame('E103: No numeric value found',$asset->get('Error'));
+    }
+
+    public function testInterestUsesRequestedInterval(): void
+    {
+        $asset=new \SourcePot\Asset\Asset(100,'EUR',new \DateTime('2026-11-21'));
+        $steps=$asset->addIntrest('P1M',2,10);
+        $this->assertSame('2027-01-21',$asset->get('dateTime')->format('Y-m-d'));
+        $this->assertSame(121.0,$steps[2]['value']);
+    }
+
+    public function testMortgageRejectsBelowInterestPayment(): void
+    {
+        $result=(new \SourcePot\Asset\Asset())->fixedRateMortgage(1000,12,10,2);
+        $this->assertSame('E102: Repayment below interest',$result['Error']);
+    }
+
+    public function testMortgagePaysOffWithFinalPayment(): void
+    {
+        $result=(new \SourcePot\Asset\Asset())->fixedRateMortgage(1000,12,100,2);
+        $this->assertArrayNotHasKey('Error',$result);
+        $this->assertEqualsWithDelta(12.68,(float)$result['Effective yearly interest'],0.001);
+        $this->assertEqualsWithDelta(0.92,(float)$result['Years'],0.001);
+    }
+
     public function testDateParser(): void
     {
         $testArr=['3456 EUR'=>['value'=>3456.0,'unit'=>'EUR'],

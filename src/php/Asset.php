@@ -108,17 +108,20 @@ final class Asset{
         if (abs($this->asset['value'])>self::LIMITS['max']){
             $this->asset['value']=($this->asset['value']>0)?self::LIMITS['max']:-self::LIMITS['max'];
             $this->asset['Warning']='E100: Value is limited to '.$this->asset['value'];
-        } else if (abs($this->asset['value'])<self::LIMITS['min']){
+        } else if ($this->asset['value']!==0.0 && abs($this->asset['value'])<self::LIMITS['min']){
             $this->asset['value']=($this->asset['value']>0)?self::LIMITS['min']:-self::LIMITS['min'];
             $this->asset['Warning']='E100: Value is limited to '.$this->asset['value'];
         }
-        $this->asset['money']=$moneyParser->parse(strval($this->asset['value']),new \Money\Currency($unit));
+        $this->asset['money']=$moneyParser->parse(strval($this->asset['value']),new \Money\Currency($this->asset['unit']));
     }
 
     public function setFromString(string $string,string|NULL $unit=NULL,\DateTime|NULL $dateTime=NULL)
     {
         $asset=$this->guessAssetFromString($string,$unit,$dateTime);
         $this->set($asset['value'],$asset['unit'],$asset['dateTime']);
+        if (isset($asset['Error'])){
+            $this->asset['Error']=$asset['Error'];
+        }
     }
 
     /**
@@ -200,6 +203,8 @@ final class Asset{
             }
             $asset['value string']=$match[1].$numberStr.($match[5]??'');
             $asset['value']=floatval($asset['value string']);
+        } else {
+            $asset['Error']='E103: No numeric value found';
         }
         return $asset;
     }
@@ -221,27 +226,35 @@ final class Asset{
 
     private function addUnitFromString(array $asset,string|null $unit=''):array
     {
-        $unit=strtoupper($unit?:($asset['unit']??$asset['string']));
+        $unit=strtoupper($unit?:($asset['unit']??''));
+        $normalizedUnit=$this->normalizeUnit($unit);
+        $string=strtoupper($asset['string']??'');
         $asset['Currency']='';
-        if (isset(self::CURRENCY_UNIT_ALIAS[$unit])){
-            $asset['unit']=$asset['Currency']=self::CURRENCY_UNIT_ALIAS[$unit];
+        foreach(self::CURRENCY_UNIT_ALIAS as $needle=>$code){
+            if (strpos($string,strtoupper($needle))!==FALSE){
+                $asset['unit']=$asset['Currency']=$code;
+                break;
+            }
         }
         if (empty($asset['Currency'])){
-            foreach(self::CURRENCY_UNIT_ALIAS as $needle=>$code){
-                if (strpos($unit,$needle)!==FALSE){
-                    $asset['unit']=$asset['Currency']=$code;
+            foreach($this->currencies as $currency){
+                $currencyCode=$currency->getCode();
+                if (strlen($currencyCode)>=3 && strpos($string,$currencyCode)!==FALSE){
+                    $asset['unit']=$asset['Currency']=$currencyCode;
                     break;
                 }
             }
         }
         if (empty($asset['Currency'])){
             foreach($this->currencies as $currency){
-                if (strlen($currency->getCode())<3){continue;}
-                if (strpos($unit,$currency->getCode())!==FALSE){
-                    $asset['unit']=$asset['Currency']=$currency->getCode();
+                if ($normalizedUnit===($currencyCode=$currency->getCode())){
+                    $asset['unit']=$asset['Currency']=$currencyCode;
                     break;
                 }
             }
+        }
+        if (empty($asset['Currency']) && isset(self::CURRENCY_UNIT_ALIAS[$unit])){
+            $asset['unit']=$asset['Currency']=self::CURRENCY_UNIT_ALIAS[$unit];
         }
         $asset['unit']=$asset['unit']??self::DEFAULT_UNIT;
         return $asset;
@@ -256,11 +269,13 @@ final class Asset{
     private function getExchangeRateArr(string $fromUnit,string $toUnit,\DateTime|NULL $conversionDateTime=NULL):array
     {
         $rates=new Rates();
+        $sourceRate=$rates->getRate($conversionDateTime,$fromUnit);
+        $targetRate=$rates->getRate($conversionDateTime,$toUnit);
         $exchageRate=[];
-        $exchageRate['EUR'][$fromUnit]=strval(($rates->getRate($conversionDateTime,$fromUnit))['value']);
-        $exchageRate['EUR'][$toUnit]=strval(($rates->getRate($conversionDateTime,$toUnit))['value']);
+        $exchageRate['EUR'][$fromUnit]=strval($sourceRate['value']);
+        $exchageRate['EUR'][$toUnit]=strval($targetRate['value']);
         $exchageRate[$fromUnit][$toUnit]=bcdiv($exchageRate['EUR'][$toUnit],$exchageRate['EUR'][$fromUnit],self::BCMATH_SCALE);
-        return $exchageRate;
+        return ['rates'=>$exchageRate,'source'=>$sourceRate,'target'=>$targetRate];
     }
 
     final public function convert2unit(string $unit,\DateTime|NULL $conversionDateTime=NULL)
@@ -270,7 +285,10 @@ final class Asset{
             $conversionDateTime=$conversionDateTime??$this->asset['dateTime'];
             $errors=$warnings=[];
             // calculate money conversion
-            $exchageRateArr=$this->getExchangeRateArr($this->asset['unit'],$unit,$conversionDateTime);
+            $exchangeRateResult=$this->getExchangeRateArr($this->asset['unit'],$unit,$conversionDateTime);
+            $exchageRateArr=$exchangeRateResult['rates'];
+            $sourceRate=$exchangeRateResult['source'];
+            $targetRate=$exchangeRateResult['target'];
             $exchange = new FixedExchange($exchageRateArr);
             $converter = new Converter($this->currencies, $exchange);
             $this->asset['money'] = $converter->convert($this->asset['money'], new Currency($unit));
@@ -290,7 +308,7 @@ final class Asset{
 
     final public function multiply($multiplier=1):string
     {
-        $multiplier=(is_string($multiplier));
+        $multiplier=(strval($multiplier));
         $this->asset['money']= $this->asset['money']->multiply($multiplier);
         $this->asset['value']=$this->valueFromMoney($this->asset['money']);
         return $this->__toString();
@@ -298,7 +316,10 @@ final class Asset{
     
     final public function divide($divider=1):string
     {
-        $divider=(is_string($divider));
+        $divider=(strval($divider));
+        if ($divider==='0' || bccomp($divider,'0',12)==0){
+            throw new \InvalidArgumentException('E105: Divider must not be zero');
+        }
         $this->asset['money']= $this->asset['money']->divide($divider);
         $this->asset['value']=$this->valueFromMoney($this->asset['money']);
         return $this->__toString();
@@ -325,11 +346,15 @@ final class Asset{
     {
         // get to add asset from string
         $toAddAsset=$this->guessAssetFromString($string,$unit,$dateTime);
+        if (isset($toAddAsset['Error'])){
+            throw new \Exception($toAddAsset['Error']);
+        }
         $unit=(empty($toAddAsset['unit']))?$unit:$toAddAsset['unit'];
         $moneyParser = new DecimalMoneyParser($this->currencies);
         $toAddAsset['money'] = $moneyParser->parse($toAddAsset['value string'],new \Money\Currency($unit));
         // convert toAddAsset to target unit
-        $exchageRateArr=$this->getExchangeRateArr($unit,$this->asset['unit'],$dateTime);
+        $exchangeRateResult=$this->getExchangeRateArr($unit,$this->asset['unit'],$dateTime);
+        $exchageRateArr=$exchangeRateResult['rates'];
         $exchange = new FixedExchange($exchageRateArr);
         $converter = new Converter($this->currencies, $exchange);
         $money = $converter->convert($toAddAsset['money'], new Currency($this->asset['unit']));
@@ -347,10 +372,13 @@ final class Asset{
         return $this->__toString();
     }
 
-    final public function addIntrest(string $intervalDuration,int $intervalCount, $ratePercent=3):array
+    final public function addIntrest(string $intervalDuration='P1Y',int $intervalCount=1, $ratePercent=3):array
     {
+        if ($intervalCount<0){
+            throw new \InvalidArgumentException('E106: Interval count must not be negative');
+        }
         $multiplier=bcadd('1',bcdiv(strval($ratePercent),'100',self::BCMATH_SCALE),self::BCMATH_SCALE);
-        $dateInterval=new \DateInterval('P1Y');
+        $dateInterval=new \DateInterval($intervalDuration);
         $lastValue=$this->asset['value'];
         $steps=[0=>['dateTime'=>$this->asset['dateTime']->format('c'),'value'=>$this->asset['value'],'interest'=>0]];
         for($count=1;$count<=$intervalCount;$count++){
@@ -366,30 +394,52 @@ final class Asset{
 
     final public function fixedRateMortgage($loan=300000,$yearlyInterestPercent=3, $monthlyPayment=2800,int $scale=2):array
     {
+        $loan=strval($loan);
+        $monthlyPayment=strval($monthlyPayment);
+        $yearlyInterestPercent=strval($yearlyInterestPercent);
+        $scale=max(2,min($scale,12));
+        $mathScale=12;
+        if (bccomp($loan,'0',$scale)<0){
+            return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>'NaN','Accumulated payment'=>'0','Accumulated interest'=>'0','Error'=>'E102: Loan must not be negative'];
+        }
+        if (bccomp($loan,'0',$scale)==0){
+            return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>0,'Accumulated payment'=>'0','Accumulated interest'=>'0','Effective yearly interest'=>$yearlyInterestPercent];
+        }
+        if (bccomp($monthlyPayment,'0',$scale)<=0){
+            return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>'NaN','Accumulated payment'=>'0','Accumulated interest'=>'0','Error'=>'E102: Monthly payment must be positive'];
+        }
+        if (bccomp($yearlyInterestPercent,'0',$scale)<0){
+            return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>'NaN','Accumulated payment'=>'0','Accumulated interest'=>'0','Error'=>'E102: Interest rate must not be negative'];
+        }
+
         $month=0;
         $loanLeft=strval($loan);
-        $monthlyPayment=strval($monthlyPayment);
         $accumulatedInterest='0';
         $accumulatedPayment='0';
-        $yearlyInterestRate=bcdiv(strval($yearlyInterestPercent),'100',self::BCMATH_SCALE);
-        $monthlyIntrestRate=bcdiv($yearlyInterestRate,'12',self::BCMATH_SCALE);
-        while(bccomp($loanLeft,'0',$scale)>-1){
+        $yearlyInterestRate=bcdiv(strval($yearlyInterestPercent),'100',$mathScale);
+        $monthlyIntrestRate=bcdiv($yearlyInterestRate,'12',$mathScale);
+        while(bccomp($loanLeft,'0',$mathScale)>0 && $month<1200){
             $month++;
-            $interest=bcmul($loanLeft,$monthlyIntrestRate,self::BCMATH_SCALE);
-            $repayment=bcsub($monthlyPayment,$interest,$scale);
-            if (bccomp($monthlyPayment,$interest,$scale)<1){
-                return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>'NaN','Accumulated payment'=>$monthlyPayment,'Accumulated interest'=>$interest,'Error'=>'E102: Repayment below interest'];
+            $interest=bcmul($loanLeft,$monthlyIntrestRate,$mathScale);
+            if (bccomp($monthlyPayment,$interest,$mathScale)<1){
+                return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>'NaN','Accumulated payment'=>$accumulatedPayment,'Accumulated interest'=>$accumulatedInterest,'Error'=>'E102: Repayment below interest'];
             }
-            $loanLeft=bcsub($loanLeft,$repayment,$scale);
-            $accumulatedInterest=bcadd($accumulatedInterest,$interest,$scale);
-            $accumulatedPayment=bcadd($accumulatedPayment,$monthlyPayment,$scale);
-            if ($month===12){
-                $yearlyInterestPercent=bcdiv($accumulatedInterest,$loanLeft,self::BCMATH_SCALE);
-                $yearlyInterestPercent=bcmul($yearlyInterestPercent,'100',$scale);
+            $payment=$monthlyPayment;
+            $payoff=bcadd($loanLeft,$interest,$mathScale);
+            if (bccomp($payment,$payoff,$mathScale)>=0){
+                $payment=$payoff;
             }
+            $principal=bcsub($payment,$interest,$mathScale);
+            $loanLeft=bcsub($loanLeft,$principal,$mathScale);
+            $accumulatedInterest=bcadd($accumulatedInterest,$interest,$mathScale);
+            $accumulatedPayment=bcadd($accumulatedPayment,$payment,$mathScale);
         }
-        $accumulatedPayment=bcadd($accumulatedPayment,$loanLeft,$scale);
-        return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>round($month/12,2),'Accumulated payment'=>$accumulatedPayment,'Accumulated interest'=>$accumulatedInterest,'Effective yearly interest'=>$yearlyInterestPercent];
+        if (bccomp($loanLeft,'0',$scale)>0){
+            return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>'NaN','Accumulated payment'=>$accumulatedPayment,'Accumulated interest'=>$accumulatedInterest,'Error'=>'E102: Mortgage exceeds 100-year limit'];
+        }
+        $monthlyRate=floatval($yearlyInterestRate)/12;
+        $effectiveYearlyPercent=(pow(1+$monthlyRate,12)-1)*100;
+        return ['Loan'=>$loan,'Monthly payment'=>$monthlyPayment,'Years'=>round($month/12,2),'Accumulated payment'=>$accumulatedPayment,'Accumulated interest'=>$accumulatedInterest,'Effective yearly interest'=>round($effectiveYearlyPercent,$scale)];
     }
 
 }
